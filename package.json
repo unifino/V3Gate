@@ -32,6 +32,8 @@
         "ext": "ts"
     },
     "dependencies": {
-        "sqlite3": "^5.1.4"
+        "scp2": "^0.5.0",
+        "sqlite3": "^5.1.4",
+        "yargs": "^17.6.2"
     }
 }
