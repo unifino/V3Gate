@@ -1,3 +1,16 @@
+export type ARGv = {
+    clear: boolean,
+    sort: "usage"|"user"|"valid",
+    all: boolean,
+    refresh: "justDBs"|"Full",
+    fullRefresh: boolean,
+    c: boolean,
+    s: "usage"|"user"|"valid",
+    a: boolean,
+    f: "justDBs"|"Full"
+    F: boolean
+}
+
 export type CNX = {
     id: number,
     user_id: number,
@@ -50,5 +63,6 @@ export type Table = {
     CNX: number,
     usage: number,
     Traffic: string,
+    Diff?: number,
     Valid: string
 }[]

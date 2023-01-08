@@ -13,11 +13,11 @@ let now = new Date().getTime();
 let hourFactor = 60*1000*60;
 let dayFactor = hourFactor*24;
 
-// -- =====================================================================================
-
 let dbs = [ 'x-ui_1.db', 'x-ui_3.db', 'x-ui_4.db' ];
 let refreshCmd = "~/Documents/VPS/Download.sh";
 let uploadCmd = "~/Documents/VPS/Update.sh";
+
+// -- =====================================================================================
 
 init();
 
@@ -30,13 +30,15 @@ async function init () {
 
     // await userRename( dbs, "Barani", "Fa X1" );
 
-    // await userTimer( dbs, "Fa X1", new Date( 2023,1,5,0,0 ) )
+    // await userTimer( dbs, "Mohsen", new Date( 2023,0,25,0,0 ) )
     // .then( msg => console.log( msg ) )
     // .catch( e => console.log( "err:", e ) );
 
-    grouper ( dbs )
-    .then( groups => console.log( reporter( groups ) ) )
-    .catch( e => console.log(e) );
+    let oldDBs = dbs.reduce( (x,i) => [ ...x, i+".bak" ] ,[] );
+    let report = reporter( await grouper ( dbs ), await grouper ( oldDBs ) );
+
+    console.clear();
+    console.log(report);
 
 }
 
@@ -57,7 +59,7 @@ async function ARGvController () {
 
 // -- =====================================================================================
 
-function info ( groups ): TS.Table {
+function info ( groups: TS.Users, oldData?: TS.Users ): TS.Table {
 
     let table: TS.Table = [];
     let downloadAmount: number;
@@ -272,11 +274,21 @@ async function runShellCmd( cmd: string ) {
 
 // -- =====================================================================================
 
-function reporter ( groups: TS.Users ) {
+function reporter ( groups: TS.Users, oldGroups: TS.Users ) {
 
-    let table: TS.Table = [];
+    let table: TS.Table;
+    let oldTable: TS.Table;
 
     table = info ( groups );
+    oldTable = info ( oldGroups );
+
+    // .. Berechnung der Differenz
+    for ( let row of table ) {
+        row.Diff = row.usage - oldTable.find( x => x.Name === row.Name ).usage;
+        row.Diff /= 1024*1024;
+        row.Diff = row.Diff | 0;
+        if ( !row.Diff ) row.Diff = <any>"";
+    }
 
     // .. report
     switch (ARGv.sort) {
@@ -302,9 +314,6 @@ function reporter ( groups: TS.Users ) {
     // .. remove not activated users
     if ( !ARGv.all ) table = table.filter( x => x.usage > 10000 );
 
-    // // .. put at Top Not activated Users
-    // table.sort( a=>a.usage<100000 ? -1:1 );
-
     // .. remove usage column
     for ( let row of table ) delete row.usage;
 
@@ -315,19 +324,31 @@ function reporter ( groups: TS.Users ) {
 
 // -- =====================================================================================
 
-function myTable( input: []|{} ) {
+function myTable( table: TS.Table ) {
 
-    let result: string = '';
+    // .. reorder tha current Table
+    table = table.reduce( (x,i) => {
+        x.push( { 
+            "👤": i.Name,
+            "🖥": i.CNX,
+            "∑": i.Traffic,
+            [ ARGv.fullRefresh ? "⏱" : "⏲" ]: i.Diff,
+            "♻": i.Valid
+        } )
+        return x;
+    }, [] );
+
+        let result: string = '';
     let r: string;
 
     const ts = new Transform( { transform(chunk, enc, cb) { cb(null, chunk) } } );
     const logger = new Console( { stdout: ts } );
 
-    logger.table(input);
+    logger.table(table);
 
-    const table = ( ts.read() || '' ).toString();
+    const tableString = ( ts.read() || '' ).toString();
 
-    for ( let row of table.split(/[\r\n]+/) ) {
+    for ( let row of tableString.split(/[\r\n]+/) ) {
         r = row.replace( /[^┬]*┬/, '┌' );
         r = r.replace( /^├─*┼/, '├' );
         r = r.replace( /│[^│]*/, '' );

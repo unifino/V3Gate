@@ -11,6 +11,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 let fs = require('fs');
 const shell = require('shelljs');
+const { Console } = require('console');
+const { Transform } = require('stream');
 const SQL_lite_3 = require("sqlite3");
 const ARGv_1 = require("./ARGv");
 // -- =====================================================================================
@@ -26,74 +28,72 @@ init();
 // ! MAIN ACTIONS DEFINES HERE
 function init() {
     return __awaiter(this, void 0, void 0, function* () {
+        yield ARGvController();
         // await userRename( dbs, "Barani", "Fa X1" );
-        // await userTimer( dbs, "Fa X1", new Date( 2023,1,5,0,0 ) )
+        // await userTimer( dbs, "Mohsen", new Date( 2023,0,25,0,0 ) )
         // .then( msg => console.log( msg ) )
         // .catch( e => console.log( "err:", e ) );
-        if (ARGv_1.ARGv.refresh || ARGv_1.ARGv.fullRefresh) {
-            let append = (ARGv_1.ARGv.f === "Full") || ARGv_1.ARGv.fullRefresh ? " y" : "";
-            yield runShellCmd(refreshCmd + append);
-        }
-        info(dbs)
+        grouper(dbs)
             .then(groups => {
-            let table = [];
-            let downloadAmount;
-            let validFor;
-            Object.keys(groups).forEach(group => {
-                downloadAmount = 0;
-                validFor = "                                ";
-                validFor = "::::::::: | ::::::::::::::::::::";
-                for (let c of groups[group])
-                    downloadAmount += c.down;
-                if (groups[group][0].expiry_time) {
-                    validFor = ((groups[group][0].expiry_time - now) / dayFactor | 0) + " Day(s)";
-                    validFor += " | " + new Date(groups[group][0].expiry_time)
-                        .toString()
-                        .split(" ")
-                        .filter((x, i) => [1, 2, 3, 4].includes(i))
-                        .join(" ");
-                }
-                // .. nur Verschönerer
-                if (validFor.length === 31)
-                    validFor = " " + validFor;
-                table.push({
-                    Name: group,
-                    CNXc: groups[group].length / dbs.length,
-                    usage: downloadAmount,
-                    Traffic: (downloadAmount / 1024 / 1024 / 1024).toFixed(1) + " GB",
-                    Valid: validFor
-                });
-            });
-            // .. report
-            switch (ARGv_1.ARGv.sort) {
-                case "usage":
-                    table = table.sort((a, b) => a.usage > b.usage ? -1 : 1);
-                    break;
-                case "user":
-                    table = table.sort((a, b) => a.Name > b.Name ? 1 : -1);
-                    break;
-                case "valid":
-                    table = table.sort((a, b) => a.Valid > b.Valid ? 1 : -1);
-                    break;
-                default:
-                    console.log("Sorting is not Activated!");
-                    break;
-            }
-            // .. remove not activated users
-            if (!ARGv_1.ARGv.all)
-                table = table.filter(x => x.usage > 10000);
-            // // .. put at Top Not activated Users
-            // table.sort( a=>a.usage<100000 ? -1:1 );
-            // .. remove usage column
-            for (let row of table)
-                delete row.usage;
-            console.table(table);
+            grouper(dbs.reduce((x, i) => {
+                x.push(i + ".bak");
+                return x;
+            }, []))
+                .then(oldGroup => console.log(reporter(groups, oldGroup)));
         })
             .catch(e => console.log(e));
     });
 }
 // -- =====================================================================================
-function info(dbs) {
+function ARGvController() {
+    return __awaiter(this, void 0, void 0, function* () {
+        // .. clear the terminal
+        if (ARGv_1.ARGv.clear)
+            console.clear();
+        // .. (Full)Refreshing Command
+        if (ARGv_1.ARGv.refresh || ARGv_1.ARGv.fullRefresh) {
+            let append = (ARGv_1.ARGv.f === "Full") || ARGv_1.ARGv.fullRefresh ? " y" : "";
+            yield runShellCmd(refreshCmd + append);
+        }
+    });
+}
+// -- =====================================================================================
+function info(groups, oldData) {
+    let table = [];
+    let downloadAmount;
+    let validFor;
+    for (let group of Object.keys(groups)) {
+        downloadAmount = 0;
+        validFor = "                                ";
+        validFor = "::::::::: | ::::::::::::::::::::";
+        validFor = "          |                 ";
+        for (let c of groups[group])
+            downloadAmount += c.down;
+        if (groups[group][0].expiry_time) {
+            validFor = ((groups[group][0].expiry_time - now) / dayFactor | 0) + " Day(s)";
+            validFor += " | " + new Date(groups[group][0].expiry_time)
+                .toString()
+                .split(" ")
+                .filter((x, i) => [1, 2, 4].includes(i))
+                // .. put Day at begging
+                .sort(x => x.length === 2 ? -1 : 1)
+                .join(" ");
+        }
+        // .. nur Verschönerer
+        if (validFor.length === 31)
+            validFor = " " + validFor;
+        table.push({
+            Name: group,
+            CNX: groups[group].length / dbs.length,
+            usage: downloadAmount,
+            Traffic: (downloadAmount / 1024 / 1024 / 1024).toFixed(1) + " GB",
+            Valid: validFor
+        });
+    }
+    return table;
+}
+// -- =====================================================================================
+function grouper(dbs) {
     return __awaiter(this, void 0, void 0, function* () {
         let db_tmp, result_tmp = {};
         // .. loop over dbs
@@ -218,6 +218,67 @@ function runShellCmd(cmd) {
             }));
         });
     });
+}
+// -- =====================================================================================
+function reporter(groups, oldGroups) {
+    let table;
+    let oldTable;
+    table = info(groups);
+    oldTable = info(oldGroups);
+    // .. Berechnung der Differenz
+    for (let row of table) {
+        row.Diff = row.usage - oldTable.find(x => x.Name === row.Name).usage;
+        row.Diff /= 1024 * 1024;
+        row.Diff = row.Diff | 0;
+        if (!row.Diff)
+            row.Diff = "";
+    }
+    // .. report
+    switch (ARGv_1.ARGv.sort) {
+        case "usage":
+            table = table.sort((a, b) => a.usage > b.usage ? -1 : 1);
+            break;
+        case "user":
+            table = table.sort((a, b) => a.Name > b.Name ? 1 : -1);
+            break;
+        case "valid":
+            table = table.sort((a, b) => a.Valid > b.Valid ? 1 : -1);
+            break;
+        default:
+            console.log("Sorting is not Activated!");
+            break;
+    }
+    // .. remove not activated users
+    if (!ARGv_1.ARGv.all)
+        table = table.filter(x => x.usage > 10000);
+    // .. remove usage column
+    for (let row of table)
+        delete row.usage;
+    // .. report it
+    return myTable(table);
+}
+// -- =====================================================================================
+function myTable(table) {
+    // .. reorder tha current Table
+    table = table.reduce((x, i) => {
+        x.push({ "👤": i.Name, "⛖": i.CNX, "∑": i.Traffic, "~": i.Diff, "♻": i.Valid });
+        return x;
+    }, []);
+    let result = '';
+    let r;
+    const ts = new Transform({ transform(chunk, enc, cb) { cb(null, chunk); } });
+    const logger = new Console({ stdout: ts });
+    logger.table(table);
+    const tableString = (ts.read() || '').toString();
+    for (let row of tableString.split(/[\r\n]+/)) {
+        r = row.replace(/[^┬]*┬/, '┌');
+        r = r.replace(/^├─*┼/, '├');
+        r = r.replace(/│[^│]*/, '');
+        r = r.replace(/^└─*┴/, '└');
+        r = r.replace(/'/g, ' ');
+        result += `${r}\n`;
+    }
+    return result;
 }
 // -- =====================================================================================
 // fs.writeFile( 'xxx.json', JSON.stringify( "DATA" ), function (err) {

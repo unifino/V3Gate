@@ -15,15 +15,10 @@ exports.ARGv = ARGvs
         console.log("\n Adding a New Note! ", argv.title);
     }
 })
-    .command({
-    command: 'clear',
-    describe: "Clear the Terminal",
-    builder: {
-        title: {
-            describe: 'Note Title'
-        }
-    },
-    handler: function (argv) { console.log("hatef"); console.clear(); console.log("ji"); }
+    .option('clear', {
+    alias: 'c',
+    description: 'Clear Terminal',
+    type: Boolean
 })
     .option('sort', {
     alias: 's',

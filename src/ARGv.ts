@@ -1,6 +1,8 @@
+import * as TS                          from "./types/myTypes"
+
 const ARGvs = require('yargs');
 
-export const ARGv = ARGvs
+export const ARGv: TS.ARGv = ARGvs
 
 .command( {
     command : 'add',
@@ -24,7 +26,7 @@ export const ARGv = ARGvs
 .option( 'sort', {
     alias: 's',
     description: 'Sort result by ...',
-    type: [ 'Usage', 'User' ]
+    type: [ 'Usage', 'User', 'valid' ]
 } )
 
 .option( 'all', {
