@@ -4,7 +4,7 @@
     "description": "",
     "main": "index.js",
     "scripts": {
-        "start": "node --inspect=5858 -r ts-node/register ./src/server.ts",
+        "start": "node -r ts-node/register ./src/server.ts",
         "start:watch": "nodemon",
         "build": "tsc"
     },
@@ -33,6 +33,7 @@
     },
     "dependencies": {
         "scp2": "^0.5.0",
+        "shelljs": "^0.8.5",
         "sqlite3": "^5.1.4",
         "yargs": "^17.6.2"
     }

@@ -1,63 +1,11 @@
 let fs = require('fs');
-const yargs = require('yargs');
+const shell = require('shelljs');
+const { Console } = require('console');
+const { Transform } = require('stream');
+
 import * as SQL_lite_3                  from "sqlite3"
-
-// -- =====================================================================================
-
-type CNX = {
-    id: number,
-    user_id: number,
-    up: number,
-    down: number,
-    total: number,
-    remark: string,
-    enable: 0|1,
-    expiry_time: number,
-    listen: string,
-    port: number,
-    protocol: 'vless'|'vmess',
-    settings: { 
-        clients: [ {
-            id: string,
-            flow: "xtls-rprx-direct" 
-          }],
-        decryption: "none",
-        fallbacks: [] 
-    },
-    stream_settings: {
-        network: "kcp",
-        security: "none",
-        kcpSettings: {
-          mtu: number,
-          tti: number,
-          uplinkCapacity: number,
-          downlinkCapacity: number,
-          congestion: boolean,
-          readBufferSize: number,
-          writeBufferSize: number,
-          header: {
-            type: "none"
-          },
-          seed: string
-        }
-      },
-    tag: string,
-    sniffing: {
-        enabled: boolean,
-        destOverride: [ "http", "tls" ]
-    }
-}
-
-type Users = { [key: string]: CNX[] }
-
-type Table = {
-    index?: number,
-    Name: string,
-    CNXc: number,
-    usage: number,
-    Traffic: string,
-    Valid: string
-}[]
+import * as TS                          from "./types/myTypes"
+import { ARGv }                         from "./ARGv"
 
 // -- =====================================================================================
 
@@ -68,6 +16,9 @@ let dayFactor = hourFactor*24;
 // -- =====================================================================================
 
 let dbs = [ 'x-ui_1.db', 'x-ui_3.db', 'x-ui_4.db' ];
+let refreshCmd = "~/Documents/VPS/Download.sh";
+let uploadCmd = "~/Documents/VPS/Update.sh";
+
 init();
 
 // -- =====================================================================================
@@ -75,7 +26,7 @@ init();
 // ! MAIN ACTIONS DEFINES HERE
 async function init () {
 
-    console.clear();
+    await ARGvController();
 
     // await userRename( dbs, "Barani", "Fa X1" );
 
@@ -83,99 +34,76 @@ async function init () {
     // .then( msg => console.log( msg ) )
     // .catch( e => console.log( "err:", e ) );
 
-    const argv = yargs
-
-    .option( 'sort', {
-        alias: 's',
-        description: 'Sort result by ...',
-        type: [ 'Usage', 'User' ]
-    } )
-    .option( 'all', {
-        alias: 'a',
-        description: 'Report all users including not activated ones.',
-        type: Boolean
-    } )
-    .help().alias( 'help', 'h' )
-    .parse();
-
-
-    info ( dbs )
-    .then( groups => {
-
-        let table: Table = [];
-        let downloadAmount: number;
-        let validFor: string;
-
-        Object.keys( groups ).forEach( group => {
-
-            downloadAmount = 0;
-            validFor = "                                ";
-            validFor = "::::::::: | ::::::::::::::::::::";
-
-            for ( let c of groups[ group ] ) downloadAmount += c.down;
-            if ( groups[ group ][0].expiry_time ) {
-                validFor = ((groups[ group ][0].expiry_time-now)/dayFactor|0) + " Day(s)";
-                validFor += " | " + new Date( groups[ group ][0].expiry_time )
-                .toString()
-                .split( " " )
-                .filter( (x,i) => [1,2,3,4].includes(i) )
-                .join( " " )
-            }
-
-            // .. nur Verschönerer
-            if ( validFor.length === 31 ) validFor = " " + validFor;
-
-            table.push( {
-                Name: group,
-                CNXc: groups[ group ].length/ dbs.length,
-                usage: downloadAmount,
-                Traffic: (downloadAmount/1024/1024/1024).toFixed(1) + " GB",
-                Valid: validFor
-            } );
-
-        } );
-
-        // .. report
-        switch (argv.sort) {
-
-            case "usage":
-                table = table.sort( (a,b)=>a.usage>b.usage ? -1:1 );
-                // .. put aside Not activated Users
-                table.sort( a=>a.usage<100000 ? -1:1 );
-                break;
-
-            case "user":
-                table = table.sort( (a,b)=>a.Name>b.Name ? 1:-1 );
-                break;
-
-            case "valid":
-                table = table.sort( (a,b)=>a.Valid>b.Valid ? 1:-1 );
-                break;
-
-            default: 
-                console.log( "Sorting is not Activated!" );
-                break;
-
-        }
-
-        // .. remove not activated users
-        if ( !argv.all ) table = table.filter( x => x.usage > 10000 );
-
-        // .. remove usage column
-        for ( let row of table ) delete row.usage;
-
-        console.table( table );
-
-    } )
+    grouper ( dbs )
+    .then( groups => console.log( reporter( groups ) ) )
     .catch( e => console.log(e) );
 
 }
 
 // -- =====================================================================================
 
-async function info ( dbs: string[] ) {
+async function ARGvController () {
 
-    let db_tmp: SQL_lite_3.Database, result_tmp: Users = {};
+    // .. clear the terminal
+    if ( ARGv.clear ) console.clear();
+
+    // .. (Full)Refreshing Command
+    if ( ARGv.refresh || ARGv.fullRefresh ) {
+        let append = (ARGv.f === "Full") || ARGv.fullRefresh ? " y" : "";
+        await runShellCmd( refreshCmd + append );
+    }
+
+}
+
+// -- =====================================================================================
+
+function info ( groups ): TS.Table {
+
+    let table: TS.Table = [];
+    let downloadAmount: number;
+    let validFor: string;
+
+    for( let group of Object.keys( groups ) ) {
+
+        downloadAmount = 0;
+        validFor = "                                ";
+        validFor = "::::::::: | ::::::::::::::::::::";
+        validFor = "          |                 ";
+
+        for ( let c of groups[ group ] ) downloadAmount += c.down;
+        if ( groups[ group ][0].expiry_time ) {
+            validFor = ((groups[ group ][0].expiry_time-now)/dayFactor|0) + " Day(s)";
+            validFor += " | " + new Date( groups[ group ][0].expiry_time )
+            .toString()
+            .split( " " )
+            .filter( (x,i) => [1,2,4].includes(i) )
+            // .. put Day at begging
+            .sort( x => x.length === 2 ? -1:1 )
+            .join( " " )
+        }
+
+        // .. nur Verschönerer
+        if ( validFor.length === 31 ) validFor = " " + validFor;
+
+        table.push( {
+            Name: group,
+            CNX: groups[ group ].length/ dbs.length,
+            usage: downloadAmount,
+            Traffic: (downloadAmount/1024/1024/1024).toFixed(1) + " GB",
+            Valid: validFor
+        } );
+
+    }
+
+    return table;
+
+}
+
+// -- =====================================================================================
+
+async function grouper ( dbs: string[] ) {
+
+    let db_tmp: SQL_lite_3.Database, result_tmp: TS.Users = {};
 
     // .. loop over dbs
     for ( let db of dbs ) {
@@ -193,7 +121,7 @@ async function info ( dbs: string[] ) {
 
 async function userRename ( dbs: string[], oldName: string, newName: string ) {
 
-    let db_tmp: SQL_lite_3.Database, result_tmp: Users = {};
+    let db_tmp: SQL_lite_3.Database, result_tmp: TS.Users = {};
 
     // .. loop over dbs
     for ( let db of dbs ) {
@@ -211,7 +139,7 @@ async function userRename ( dbs: string[], oldName: string, newName: string ) {
 
 async function userTimer ( dbs: string[], user: string, date: Date ) {
 
-    let db_tmp: SQL_lite_3.Database, result_tmp: Users = {};
+    let db_tmp: SQL_lite_3.Database, result_tmp: TS.Users = {};
 
     // .. loop over dbs
     for ( let db of dbs ) {
@@ -227,7 +155,7 @@ async function userTimer ( dbs: string[], user: string, date: Date ) {
 
 // -- =====================================================================================
 
-function groupName( db: SQL_lite_3.Database, container: Users ): Promise<Users> {
+function groupName( db: SQL_lite_3.Database, container: TS.Users ): Promise<TS.Users> {
 
     let qry = 'select * from inbounds';
     let tmpName = "";
@@ -235,7 +163,7 @@ function groupName( db: SQL_lite_3.Database, container: Users ): Promise<Users> 
     return new Promise ( (rs, rx) => {
 
         // .. Read Query
-        db.all( qry, ( e, rows:CNX[] ) => {
+        db.all( qry, ( e, rows:TS.CNX[] ) => {
 
             // .. loop over results
             for( let i=0; i<rows.length; i++ ) {
@@ -272,7 +200,7 @@ async function rename ( db: SQL_lite_3.Database, oldName: string, newName: strin
         qry = 'select * from inbounds';
 
         // .. Read Query
-        db.all( qry, ( e, rows:CNX[] ) => {
+        db.all( qry, ( e, rows:TS.CNX[] ) => {
 
             // .. loop over results
             for( let i=0; i<rows.length; i++ ) {
@@ -287,7 +215,7 @@ async function rename ( db: SQL_lite_3.Database, oldName: string, newName: strin
                     "' WHERE id = " + rows[i].id;
 
                     // .. apply rename action
-                    db.all( qry, ( e, rows:CNX[] ) => { if (e) rx(e) } );
+                    db.all( qry, ( e, rows:TS.CNX[] ) => { if (e) rx(e) } );
 
                 }
 
@@ -304,7 +232,6 @@ async function rename ( db: SQL_lite_3.Database, oldName: string, newName: strin
     } );
 
 }
-
 
 // -- =====================================================================================
 
@@ -329,6 +256,87 @@ async function timer ( db: SQL_lite_3.Database, user: string, date: Date ) {
         } );
 
     } );
+
+}
+
+// -- =====================================================================================
+
+async function runShellCmd( cmd: string ) {
+    return new Promise( (rs, rx) => {
+        shell.exec( cmd, async ( code, stdout, stderr ) => {
+        if ( !code ) return rs( stdout );
+        return rx( stderr );
+        } );
+    } );
+}
+
+// -- =====================================================================================
+
+function reporter ( groups: TS.Users ) {
+
+    let table: TS.Table = [];
+
+    table = info ( groups );
+
+    // .. report
+    switch (ARGv.sort) {
+
+        case "usage":
+            table = table.sort( (a,b)=>a.usage>b.usage ? -1:1 );
+            break;
+
+        case "user":
+            table = table.sort( (a,b)=>a.Name>b.Name ? 1:-1 );
+            break;
+
+        case "valid":
+            table = table.sort( (a,b)=>a.Valid>b.Valid ? 1:-1 );
+            break;
+
+        default: 
+            console.log( "Sorting is not Activated!" );
+            break;
+
+    }
+
+    // .. remove not activated users
+    if ( !ARGv.all ) table = table.filter( x => x.usage > 10000 );
+
+    // // .. put at Top Not activated Users
+    // table.sort( a=>a.usage<100000 ? -1:1 );
+
+    // .. remove usage column
+    for ( let row of table ) delete row.usage;
+
+    // .. report it
+    return myTable( table );
+
+}
+
+// -- =====================================================================================
+
+function myTable( input: []|{} ) {
+
+    let result: string = '';
+    let r: string;
+
+    const ts = new Transform( { transform(chunk, enc, cb) { cb(null, chunk) } } );
+    const logger = new Console( { stdout: ts } );
+
+    logger.table(input);
+
+    const table = ( ts.read() || '' ).toString();
+
+    for ( let row of table.split(/[\r\n]+/) ) {
+        r = row.replace( /[^┬]*┬/, '┌' );
+        r = r.replace( /^├─*┼/, '├' );
+        r = r.replace( /│[^│]*/, '' );
+        r = r.replace( /^└─*┴/, '└' );
+        r = r.replace( /'/g, ' ' );
+        result += `${r}\n`;
+    }
+
+    return result;
 
 }
 
