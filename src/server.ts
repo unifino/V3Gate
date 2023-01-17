@@ -13,7 +13,11 @@ let now = new Date().getTime();
 let hourFactor = 60*1000*60;
 let dayFactor = hourFactor*24;
 
-let dbs = [ 'x-ui_1.db', 'x-ui_3.db', 'x-ui_4.db' ];
+let dbs = [
+    'x-ui_1.db',
+    'x-ui_3.db',
+    'x-ui_4.db'
+];
 let refreshCmd = "~/Documents/VPS/Download.sh";
 let uploadCmd = "~/Documents/VPS/Update.sh";
 
@@ -30,15 +34,21 @@ async function init () {
 
     // await userRename( dbs, "Barani", "Fa X1" );
 
-    // await userTimer( dbs, "Mohsen", new Date( 2023,0,25,0,0 ) )
+    // await userTimer( dbs, "Rasul X6", new Date( 2023,2,15,0,0 ) )
     // .then( msg => console.log( msg ) )
     // .catch( e => console.log( "err:", e ) );
 
+    // removeUser( dbs, "TMP" );
+    // removeUser( dbs, "TMP" );
+    newTempUser();
+
+    return;
+
     let oldDBs = dbs.reduce( (x,i) => [ ...x, i+".bak" ] ,[] );
     let report = reporter( await grouper ( dbs ), await grouper ( oldDBs ) );
-
     console.clear();
     console.log(report);
+
 
 }
 
@@ -64,6 +74,7 @@ function info ( groups: TS.Users, oldData?: TS.Users ): TS.Table {
     let table: TS.Table = [];
     let downloadAmount: number;
     let validFor: string;
+    let days: number;
 
     for( let group of Object.keys( groups ) ) {
 
@@ -71,14 +82,14 @@ function info ( groups: TS.Users, oldData?: TS.Users ): TS.Table {
         validFor = "                                ";
         validFor = "::::::::: | ::::::::::::::::::::";
         validFor = "          |                 ";
+        days = 0;
 
         for ( let c of groups[ group ] ) downloadAmount += c.down;
         if ( groups[ group ][0].expiry_time ) {
-            validFor = ((groups[ group ][0].expiry_time-now)/dayFactor|0) + " Day(s)";
-            validFor += " | " + new Date( groups[ group ][0].expiry_time )
-            .toString()
-            .split( " " )
-            .filter( (x,i) => [1,2,4].includes(i) )
+            days = (groups[ group ][0].expiry_time-now) / dayFactor |0;
+            validFor = days + " Day(s) | ";
+            validFor += new Date( groups[ group ][0].expiry_time ).toString()
+            .split( " " ).filter( (x,i) => [1,2,4].includes(i) )
             // .. put Day at begging
             .sort( x => x.length === 2 ? -1:1 )
             .join( " " )
@@ -92,7 +103,8 @@ function info ( groups: TS.Users, oldData?: TS.Users ): TS.Table {
             CNX: groups[ group ].length/ dbs.length,
             usage: downloadAmount,
             Traffic: (downloadAmount/1024/1024/1024).toFixed(1) + " GB",
-            Valid: validFor
+            Valid: validFor,
+            Days: days
         } );
 
     }
@@ -141,7 +153,7 @@ async function userRename ( dbs: string[], oldName: string, newName: string ) {
 
 async function userTimer ( dbs: string[], user: string, date: Date ) {
 
-    let db_tmp: SQL_lite_3.Database, result_tmp: TS.Users = {};
+    let db_tmp: SQL_lite_3.Database;
 
     // .. loop over dbs
     for ( let db of dbs ) {
@@ -151,13 +163,11 @@ async function userTimer ( dbs: string[], user: string, date: Date ) {
         await timer( db_tmp, user, date );
     }
 
-    // console.log( user, " is valid until ", day );
-
 }
 
 // -- =====================================================================================
 
-function groupName( db: SQL_lite_3.Database, container: TS.Users ): Promise<TS.Users> {
+function groupName ( db: SQL_lite_3.Database, container: TS.Users ): Promise<TS.Users> {
 
     let qry = 'select * from inbounds';
     let tmpName = "";
@@ -241,13 +251,13 @@ async function timer ( db: SQL_lite_3.Database, user: string, date: Date ) {
 
     return new Promise ( (rs, rx) => {
 
-        let qry: string, tmpName: string;
+        let qry: string;
 
         qry = "UPDATE inbounds SET expiry_time=" + 
             date.getTime() + 
-            " where remark LIKE '" + user + " PPS%'";
+            " WHERE remark LIKE '" + user + " PPS%'";
 
-            // .. Read Query
+        // .. Read Query
         db.all( qry, ( e ) => {
 
             // .. report any error
@@ -263,7 +273,7 @@ async function timer ( db: SQL_lite_3.Database, user: string, date: Date ) {
 
 // -- =====================================================================================
 
-async function runShellCmd( cmd: string ) {
+async function runShellCmd ( cmd: string ) {
     return new Promise( (rs, rx) => {
         shell.exec( cmd, async ( code, stdout, stderr ) => {
         if ( !code ) return rs( stdout );
@@ -302,7 +312,11 @@ function reporter ( groups: TS.Users, oldGroups: TS.Users ) {
             break;
 
         case "valid":
-            table = table.sort( (a,b)=>a.Valid>b.Valid ? 1:-1 );
+            table = table.sort( (a,b)=> a.Days > b.Days ? 1:-1 );
+            break;
+
+        case "activity":
+            table = table.sort( (a,b)=> a.Diff > b.Diff ? -1:1 );
             break;
 
         default: 
@@ -313,6 +327,7 @@ function reporter ( groups: TS.Users, oldGroups: TS.Users ) {
 
     // .. remove not activated users
     if ( !ARGv.all ) table = table.filter( x => x.usage > 10000 );
+    if ( !ARGv.all ) table = table.filter( x => x.Days >= 0 );
 
     // .. remove usage column
     for ( let row of table ) delete row.usage;
@@ -324,11 +339,11 @@ function reporter ( groups: TS.Users, oldGroups: TS.Users ) {
 
 // -- =====================================================================================
 
-function myTable( table: TS.Table ) {
+function myTable ( table: TS.Table ) {
 
     // .. reorder tha current Table
     table = table.reduce( (x,i) => {
-        x.push( { 
+        x.push( {
             "👤": i.Name,
             "🖥": i.CNX,
             "∑": i.Traffic,
@@ -338,7 +353,7 @@ function myTable( table: TS.Table ) {
         return x;
     }, [] );
 
-        let result: string = '';
+    let result: string = '';
     let r: string;
 
     const ts = new Transform( { transform(chunk, enc, cb) { cb(null, chunk) } } );
@@ -359,6 +374,119 @@ function myTable( table: TS.Table ) {
 
     return result;
 
+}
+
+// -- =====================================================================================
+
+async function newTempUser () {
+
+    let db_1 = await new SQL_lite_3.Database( "../db/x-ui_1.db", SQL_lite_3.OPEN_READWRITE );
+    let db_demo = await new SQL_lite_3.Database( "../db/TMO.db.demo", SQL_lite_3.OPEN_READWRITE );
+    let qry:string;
+    let iDBbs = [1,3,4];
+
+    // .. Letzte ID erhalten
+    let lastID = await getLastID( db_1 );
+    let newCNXs_count = await getCount( db_demo );
+
+    // .. IDs der Demo-Datenbank aktualisieren
+    for ( let i=1;i<=newCNXs_count;i++ ) {
+        qry = `UPDATE inbounds SET id=${(i+lastID)} WHERE id=${i}`;
+        await syncQry( db_demo, qry );
+    }
+
+    // .. BDs anhängen und Hinzufügen von Benutzern
+    for ( let i of iDBbs ) {
+        qry = "ATTACH DATABASE 'file:./../../db/x-ui_" + i + ".db' AS db" + i;
+        await syncQry( db_demo, qry );
+        qry = `INSERT INTO db${i}.inbounds SELECT * FROM inbounds WHERE id<=${(lastID+12)}`
+        await syncQry( db_demo, qry );
+    }
+
+    // .. IDs der Demo-Datenbank zurücksetzen
+    for ( let i=1;i<=newCNXs_count;i++ ) {
+        qry = "UPDATE inbounds SET id="+ i +" WHERE id="+(i+lastID);
+        await syncQry( db_demo, qry );
+    }
+
+    console.log( "Neue Benutzer wurden hinzugefügt");
+
+}
+
+// -- =====================================================================================
+
+async function getLastID ( db: SQL_lite_3.Database ): Promise<number>{
+
+    let qry = "SELECT id FROM inbounds ORDER BY id DESC LIMIT 1";
+
+    return new Promise( (rs, rx) => {
+        db.all( qry, (e, rows: TS.CNX[]) => {
+            !e ? rs(rows[0].id) : rx(e);
+        } )
+    } )
+
+}
+
+// -- =====================================================================================
+
+async function getCount ( db: SQL_lite_3.Database ): Promise<number>{
+
+    let qry = "SELECT id FROM inbounds";
+
+    return new Promise( (rs, rx) => {
+        db.all( qry, (e, rows: TS.CNX[]) => {
+            !e ? rs(rows.length) : rx(e);
+        } )
+    } )
+
+}
+
+// -- =====================================================================================
+
+async function resetIDs ( db: SQL_lite_3.Database, start: number, end: number ): Promise<number>{
+
+    // for ( let i=start; i<=end; i++ ) {
+    //     let qry = "UPDATE inbounds SET id="+ (i+start) +" WHERE id="+i;
+    //     db.all( qry, e => console.log(e)  );
+
+    // }
+
+    return new Promise( (rs, rx) => {
+    //     db.all( qry, (e, rows: TS.CNX[]) => {
+    //         !e ? rs(rows[0].id) : rx(e);
+    //     } )
+    } )
+
+}
+
+// -- =====================================================================================
+
+async function removeUser ( dbs: string[], user: string ) {
+
+    let qry = "DELETE FROM inbounds WHERE remark LIKE '" + user + " PPS%'";
+    let db_tmp: SQL_lite_3.Database;
+
+    for ( let db of dbs ) {
+        db_tmp = await new SQL_lite_3.Database( "../db/"+db, SQL_lite_3.OPEN_READWRITE )
+        await syncQry( db_tmp, qry );
+    }
+
+    console.log( `Nutzer: ${user} :: wurde gelöscht!` );
+
+}
+
+// -- =====================================================================================
+
+async function syncQry ( db: SQL_lite_3.Database, qry: string ) {
+    return new Promise( (rs, rx) => {
+        db.all( qry, (e, rows:TS.CNX[]) => {
+            if (e) {
+                rx(e);
+                console.log(e)
+            }
+            else rs( rows )
+        } );
+    } );
 }
 
 // -- =====================================================================================

@@ -1,6 +1,6 @@
 export type ARGv = {
     clear: boolean,
-    sort: "usage"|"user"|"valid",
+    sort: "usage"|"user"|"valid"|"activity",
     all: boolean,
     refresh: "justDBs"|"Full",
     fullRefresh: boolean,
@@ -64,5 +64,6 @@ export type Table = {
     usage: number,
     Traffic: string,
     Diff?: number,
-    Valid: string
+    Valid: string,
+    Days: number
 }[]

@@ -23,7 +23,7 @@ exports.ARGv = ARGvs
     .option('sort', {
     alias: 's',
     description: 'Sort result by ...',
-    type: ['Usage', 'User']
+    type: ['Usage', 'User', 'valid']
 })
     .option('all', {
     alias: 'a',
