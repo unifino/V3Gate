@@ -24,8 +24,8 @@ let iDBbs = dbs_name.reduce( (x,i) => {
 
 
 let DBs: SQL_lite_3.Database[] = [];
-let refreshCmd = "~/Documents/VPS/Download.sh";
-let uploadCmd = "~/Documents/VPS/Update.sh";
+let refreshCmd = "~/Documents/VPS/Files/Download.sh";
+let uploadCmd = "~/Documents/VPS/Files/Update.sh";
 
 // -- =====================================================================================
 
@@ -288,17 +288,6 @@ async function timer ( db: SQL_lite_3.Database, user: string, date: Date ) {
 
     } );
 
-}
-
-// -- =====================================================================================
-
-async function runShellCmd ( cmd: string ) {
-    return new Promise( (rs, rx) => {
-        shell.exec( cmd, async ( code, stdout, stderr ) => {
-        if ( !code ) return rs( stdout );
-        return rx( stderr );
-        } );
-    } );
 }
 
 // -- =====================================================================================
@@ -566,6 +555,18 @@ async function resetTraffic ( DBs: SQL_lite_3.Database[] ) {
     console.log( `All Traffics has been RESET!` );
 
 }
+
+// -- =====================================================================================
+
+async function runShellCmd ( cmd: string ) {
+    return new Promise( (rs, rx) => {
+        shell.exec( cmd, async ( code, stdout, stderr ) => {
+        if ( !code ) return rs( stdout );
+        return rx( stderr );
+        } );
+    } );
+}
+
 
 // -- =====================================================================================
 

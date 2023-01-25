@@ -19,14 +19,18 @@ const ARGv_1 = require("./ARGv");
 let now = new Date().getTime();
 let hourFactor = 60 * 1000 * 60;
 let dayFactor = hourFactor * 24;
-let iDBbs = [1, 2, 3];
-let dbs = [
+let dbs_name = [
     'x-ui_1.db',
     'x-ui_2.db',
     'x-ui_3.db'
 ];
-let refreshCmd = "~/Documents/VPS/Download.sh";
-let uploadCmd = "~/Documents/VPS/Update.sh";
+let iDBbs = dbs_name.reduce((x, i) => {
+    x.push(Number(i.replace('x-ui_', '').replace('.db', '')));
+    return x;
+}, []);
+let DBs = [];
+let refreshCmd = "~/Documents/VPS/Files/Download.sh";
+let uploadCmd = "~/Documents/VPS/Files/Update.sh";
 // -- =====================================================================================
 init();
 // -- =====================================================================================
@@ -34,22 +38,41 @@ init();
 function init() {
     return __awaiter(this, void 0, void 0, function* () {
         yield ARGvController();
-        // await userRename( dbs, "Fa X1", "Fox X1" );
-        // await userRename( dbs, "FA X2", "Fox X2" );
-        // await removeUser( dbs, "T~T" );
-        // await userTimer( dbs, "Hosseyni", new Date( 2023,1,22,0,0 ) )
-        // refreshTable( dbs );
+        DBs = yield DBs_Loader(dbs_name);
+        // await new Promise( _ => setTimeout( _ , 500 ) );
+        let dbs_bak_name = dbs_name.reduce((x, i) => [...x, "BackUP/" + i + ".bak"], []);
+        let DBs_bak = yield DBs_Loader(dbs_bak_name);
+        ;
+        // await userTimer( DBs, "Hosseyni", new Date( 2023,1,22,0,0 ) )
+        // await resetTraffic( DBs );
+        // await userRename( DBs, "Fa X1", "Fox X1" );
+        // await userRename( DBs, "FA X2", "Fox X2" );
+        // await removeUser( DBs, "T~T" );
+        // await userTimer( DBs, "Hosseyni", new Date( 2023,1,22,0,0 ) )
+        // refreshTable( DBs );
         // await new Promise( _ => setTimeout( _ , 500 ) );
         // await newTempUser();
         // await new Promise( _ => setTimeout( _ , 500 ) );
-        // await userRename( dbs, "TMP", "Hashemi" );
+        // await userRename( DBs, "TMP", "Hadi" );
         // await new Promise( _ => setTimeout( _ , 500 ) );
-        // await userTimer( dbs, "Mohsen", new Date( 2023,1,25,0,0 ) )
+        // await userTimer( DBs, "Hadi", new Date( 2023,1,26,0,0 ) )
         // await new Promise( _ => setTimeout( _ , 500 ) );
-        let oldDBs = dbs.reduce((x, i) => [...x, i + ".bak"], []);
-        let report = reporter(yield grouper(dbs), yield grouper(oldDBs));
-        console.clear();
+        let report = reporter(yield grouper(DBs), yield grouper(DBs_bak));
         console.log(report);
+    });
+}
+// -- =====================================================================================
+function DBs_Loader(dbs_name) {
+    return __awaiter(this, void 0, void 0, function* () {
+        let db_tmp;
+        let db_address;
+        let myDBs = [];
+        for (let db_name of dbs_name) {
+            db_address = `../db/${db_name}`;
+            db_tmp = yield new SQL_lite_3.Database(db_address, SQL_lite_3.OPEN_READWRITE);
+            myDBs.push(db_tmp);
+        }
+        return myDBs;
     });
 }
 // -- =====================================================================================
@@ -88,12 +111,14 @@ function info(groups, oldData) {
                 .sort(x => x.length === 2 ? -1 : 1)
                 .join(" ");
         }
+        if (days < 0)
+            validFor = "--------- | -----------";
         // .. nur Verschönerer
         if (validFor.length === 31)
             validFor = " " + validFor;
         table.push({
             Name: group,
-            CNX: groups[group].length / dbs.length,
+            CNX: groups[group].length / dbs_name.length,
             usage: downloadAmount,
             Traffic: (downloadAmount / 1024 / 1024 / 1024).toFixed(1) + " GB",
             Valid: validFor,
@@ -103,44 +128,32 @@ function info(groups, oldData) {
     return table;
 }
 // -- =====================================================================================
-function grouper(dbs) {
+function grouper(DBs) {
     return __awaiter(this, void 0, void 0, function* () {
-        let db_tmp, result_tmp = {};
+        let result_tmp = {};
         // .. loop over dbs
-        for (let db of dbs) {
-            // .. open db
-            db_tmp = yield new SQL_lite_3.Database("../db/" + db, SQL_lite_3.OPEN_READWRITE);
-            // .. get info
-            yield groupName(db_tmp, result_tmp);
-        }
+        for (let db of DBs)
+            yield groupName(db, result_tmp);
         return result_tmp;
     });
 }
 // -- =====================================================================================
-function userRename(dbs, oldName, newName) {
+function userRename(DBs, oldName, newName) {
     return __awaiter(this, void 0, void 0, function* () {
-        let db_tmp, result_tmp = {};
+        let result_tmp = {};
         // .. loop over dbs
-        for (let db of dbs) {
-            // .. open db
-            db_tmp = yield new SQL_lite_3.Database("../db/" + db, SQL_lite_3.OPEN_READWRITE);
-            // .. modify
-            yield rename(db_tmp, oldName, newName);
-        }
+        for (let db of DBs)
+            yield rename(db, oldName, newName);
         console.log(oldName, " -> ", newName);
     });
 }
 // -- =====================================================================================
-function userTimer(dbs, user, date) {
+function userTimer(DBs, user, date) {
     return __awaiter(this, void 0, void 0, function* () {
-        let db_tmp;
         // .. loop over dbs
-        for (let db of dbs) {
-            // .. open db
-            db_tmp = yield new SQL_lite_3.Database("../db/" + db, SQL_lite_3.OPEN_READWRITE);
-            // .. modify
-            yield timer(db_tmp, user, date);
-        }
+        for (let db of DBs)
+            yield timer(db, user, date);
+        console.log(`Die Benutzer: ${user} ist bis ${date} verfügbar`);
     });
 }
 // -- =====================================================================================
@@ -213,18 +226,6 @@ function timer(db, user, date) {
                 else
                     rs("OK? for: ");
             });
-        });
-    });
-}
-// -- =====================================================================================
-function runShellCmd(cmd) {
-    return __awaiter(this, void 0, void 0, function* () {
-        return new Promise((rs, rx) => {
-            shell.exec(cmd, (code, stdout, stderr) => __awaiter(this, void 0, void 0, function* () {
-                if (!code)
-                    return rs(stdout);
-                return rx(stderr);
-            }));
         });
     });
 }
@@ -308,14 +309,13 @@ function myTable(table) {
 // -- =====================================================================================
 function newTempUser() {
     return __awaiter(this, void 0, void 0, function* () {
-        let db_1 = yield new SQL_lite_3.Database("../db/x-ui_1.db", SQL_lite_3.OPEN_READWRITE);
-        let db_demo = yield new SQL_lite_3.Database("../db/TMO.db.demo", SQL_lite_3.OPEN_READWRITE);
+        let db_demo = yield new SQL_lite_3.Database("../db/BackUP/TMO.db.demo", SQL_lite_3.OPEN_READWRITE);
         let qry;
         let aPort;
         // .. Letzte ID erhalten
-        let lastID = yield getLastID(db_1);
+        let lastID = yield getLastID(DBs[0]);
         let newCNXs_count = yield getCount(db_demo);
-        let myPorts = yield newPorts(db_1, newCNXs_count);
+        let myPorts = yield newPorts(DBs[0], newCNXs_count);
         // .. IDs der Demo-Datenbank aktualisieren
         for (let i = 1; i <= newCNXs_count; i++) {
             aPort = myPorts.pop();
@@ -345,22 +345,16 @@ function newTempUser() {
 function getLastID(db) {
     return __awaiter(this, void 0, void 0, function* () {
         let qry = "SELECT id FROM inbounds ORDER BY id DESC LIMIT 1";
-        return new Promise((rs, rx) => {
-            db.all(qry, (e, rows) => {
-                !e ? rs(rows[0].id) : rx(e);
-            });
-        });
+        let answer = yield syncQry(db, qry);
+        return answer[0].id;
     });
 }
 // -- =====================================================================================
 function getCount(db) {
     return __awaiter(this, void 0, void 0, function* () {
         let qry = "SELECT id FROM inbounds";
-        return new Promise((rs, rx) => {
-            db.all(qry, (e, rows) => {
-                !e ? rs(rows.length) : rx(e);
-            });
-        });
+        let answer = yield syncQry(db, qry);
+        return answer.length;
     });
 }
 // -- =====================================================================================
@@ -378,36 +372,31 @@ function resetIDs(db, start, end) {
     });
 }
 // -- =====================================================================================
-function refreshTable(dbs) {
+function refreshTable(DBs) {
     return __awaiter(this, void 0, void 0, function* () {
         let qry_1, qry_2, qry_3, qry_4;
-        let db_tmp;
         qry_1 = "CREATE TABLE `inbounds_tmp` (`id` integer,`user_id` integer,`up` integer,`down` integer,`total` integer,`remark` text,`enable` numeric,`expiry_time` integer,`listen` text,`port` integer UNIQUE,`protocol` text,`settings` text,`stream_settings` text,`tag` text UNIQUE,`sniffing` text,PRIMARY KEY (`id`))";
         qry_2 = "INSERT INTO inbounds_tmp SELECT * FROM inbounds";
         qry_3 = "DROP TABLE inbounds";
         qry_4 = "ALTER TABLE `inbounds_tmp` RENAME TO `inbounds`";
-        for (let db of dbs) {
-            db_tmp = yield new SQL_lite_3.Database("../db/" + db, SQL_lite_3.OPEN_READWRITE);
+        for (let db of DBs) {
             // .. Neue Tabellen erstellen
-            yield syncQry(db_tmp, qry_1);
+            yield syncQry(db, qry_1);
             // .. Kopieren von Daten
-            yield syncQry(db_tmp, qry_2);
+            yield syncQry(db, qry_2);
             // .. Tabellen löschen
-            yield syncQry(db_tmp, qry_3);
+            yield syncQry(db, qry_3);
             // .. Tabellen umbenennen
-            yield syncQry(db_tmp, qry_4);
+            yield syncQry(db, qry_4);
         }
     });
 }
 // -- =====================================================================================
-function removeUser(dbs, user) {
+function removeUser(DBs, user) {
     return __awaiter(this, void 0, void 0, function* () {
         let qry = "DELETE FROM inbounds WHERE remark LIKE '" + user + " PPS%'";
-        let db_tmp;
-        for (let db of dbs) {
-            db_tmp = yield new SQL_lite_3.Database("../db/" + db, SQL_lite_3.OPEN_READWRITE);
-            yield syncQry(db_tmp, qry);
-        }
+        for (let db of DBs)
+            yield syncQry(db, qry);
         console.log(`Nutzer: ${user} :: wurde gelöscht!`);
     });
 }
@@ -435,12 +424,33 @@ function syncQry(db, qry) {
         return new Promise((rs, rx) => {
             db.all(qry, (e, rows) => {
                 if (e) {
-                    rx(e);
-                    console.log(e);
+                    console.log(e, qry);
+                    rx([e, qry]);
                 }
                 else
                     rs(rows);
             });
+        });
+    });
+}
+// -- =====================================================================================
+function resetTraffic(DBs) {
+    return __awaiter(this, void 0, void 0, function* () {
+        let qry = "UPDATE inbounds SET up=0, down=0";
+        for (let db of DBs)
+            yield syncQry(db, qry);
+        console.log(`All Traffics has been RESET!`);
+    });
+}
+// -- =====================================================================================
+function runShellCmd(cmd) {
+    return __awaiter(this, void 0, void 0, function* () {
+        return new Promise((rs, rx) => {
+            shell.exec(cmd, (code, stdout, stderr) => __awaiter(this, void 0, void 0, function* () {
+                if (!code)
+                    return rs(stdout);
+                return rx(stderr);
+            }));
         });
     });
 }
