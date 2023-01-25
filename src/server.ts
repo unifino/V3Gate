@@ -12,13 +12,21 @@ import { ARGv }                         from "./ARGv"
 let now = new Date().getTime();
 let hourFactor = 60*1000*60;
 let dayFactor = hourFactor*24;
-let iDBbs = [1,2,3];
-
-let dbs = [
+let dbs_name = [
     'x-ui_1.db',
     'x-ui_2.db',
     'x-ui_3.db'
 ];
+let iDBbs = dbs_name.reduce( (x,i) => { 
+    let id: number;
+    i = i.replace( 'x-ui_', '' );
+    i = i.replace( '.db', '' );
+    x.push( Number(i) );
+    return x;
+}, [] );
+
+
+let DBs: SQL_lite_3.Database[] = [];
 let refreshCmd = "~/Documents/VPS/Download.sh";
 let uploadCmd = "~/Documents/VPS/Update.sh";
 
@@ -31,29 +39,49 @@ init();
 // ! MAIN ACTIONS DEFINES HERE
 async function init () {
 
+    DBs = await DBs_Loader( dbs_name );
+    let dbs_bak_name = dbs_name.reduce( (x,i) => [ ...x, "BackUP/"+i+".bak" ] ,[] );
+    let DBs_bak = await DBs_Loader( dbs_bak_name );;
+
     await ARGvController();
-    await resetTraffic( dbs );
-    // await userRename( dbs, "Fa X1", "Fox X1" );
-    // await userRename( dbs, "FA X2", "Fox X2" );
-    // await removeUser( dbs, "T~T" );
-
-    // await userTimer( dbs, "Hosseyni", new Date( 2023,1,22,0,0 ) )
-
-    // refreshTable( dbs );
-    await new Promise( _ => setTimeout( _ , 500 ) );
-    // await newTempUser();
+    // await userTimer( DBs, "Hosseyni", new Date( 2023,1,22,0,0 ) )
+    // // await resetTraffic( DBs );
+    // // await userRename( DBs, "Fa X1", "Fox X1" );
+    // // await userRename( DBs, "FA X2", "Fox X2" );
+    // // await removeUser( DBs, "T~T" );
+    
+    // // await userTimer( DBs, "Hosseyni", new Date( 2023,1,22,0,0 ) )
+    
+    // // refreshTable( DBs );
     // await new Promise( _ => setTimeout( _ , 500 ) );
-    // await userRename( dbs, "TMP", "Hashemi" );
-    // await new Promise( _ => setTimeout( _ , 500 ) );
-    // await userTimer( dbs, "Mohsen", new Date( 2023,1,25,0,0 ) )
-    // await new Promise( _ => setTimeout( _ , 500 ) );
+    // // await newTempUser();
+    // // await new Promise( _ => setTimeout( _ , 500 ) );
+    // // await userRename( DBs, "TMP", "Hashemi" );
+    // // await new Promise( _ => setTimeout( _ , 500 ) );
+    // // await userTimer( DBs, "Mohsen", new Date( 2023,1,25,0,0 ) )
+    // // await new Promise( _ => setTimeout( _ , 500 ) );
 
-    let oldDBs = dbs.reduce( (x,i) => [ ...x, "BackUP/"+i+".bak" ] ,[] );
-
-    let report = reporter( await grouper ( dbs ), await grouper ( oldDBs ) );
+    let report = reporter( await grouper ( DBs ), await grouper ( DBs_bak ) );
     console.clear();
     console.log(report);
 
+}
+
+// -- =====================================================================================
+
+async function DBs_Loader ( dbs_name: string[] ): Promise<SQL_lite_3.Database[]> {
+
+    let db_tmp: SQL_lite_3.Database;
+    let db_address: string;
+    let myDBs: SQL_lite_3.Database[] = [];
+
+    for ( let db_name of dbs_name ) {
+        db_address = `../db/${db_name}`;
+        db_tmp = await new SQL_lite_3.Database( db_address, SQL_lite_3.OPEN_READWRITE );
+        myDBs.push ( db_tmp );
+    }
+
+    return myDBs;
 
 }
 
@@ -100,12 +128,14 @@ function info ( groups: TS.Users, oldData?: TS.Users ): TS.Table {
             .join( " " )
         }
 
+        if ( days<0 ) validFor = "--------- | -----------";
+
         // .. nur Verschönerer
         if ( validFor.length === 31 ) validFor = " " + validFor;
 
         table.push( {
             Name: group,
-            CNX: groups[ group ].length/ dbs.length,
+            CNX: groups[ group ].length/ dbs_name.length,
             usage: downloadAmount,
             Traffic: (downloadAmount/1024/1024/1024).toFixed(1) + " GB",
             Valid: validFor,
@@ -120,17 +150,12 @@ function info ( groups: TS.Users, oldData?: TS.Users ): TS.Table {
 
 // -- =====================================================================================
 
-async function grouper ( dbs: string[] ) {
+async function grouper ( DBs: SQL_lite_3.Database[] ) {
 
-    let db_tmp: SQL_lite_3.Database, result_tmp: TS.Users = {};
+    let result_tmp: TS.Users = {};
 
     // .. loop over dbs
-    for ( let db of dbs ) {
-        // .. open db
-        db_tmp = await new SQL_lite_3.Database( "../db/"+db, SQL_lite_3.OPEN_READWRITE );
-        // .. get info
-        await groupName( db_tmp, result_tmp );
-    }
+    for ( let db of DBs ) await groupName( db, result_tmp );
 
     return result_tmp;
 
@@ -138,17 +163,12 @@ async function grouper ( dbs: string[] ) {
 
 // -- =====================================================================================
 
-async function userRename ( dbs: string[], oldName: string, newName: string ) {
+async function userRename ( DBs: SQL_lite_3.Database[], oldName: string, newName: string ) {
 
-    let db_tmp: SQL_lite_3.Database, result_tmp: TS.Users = {};
+    let result_tmp: TS.Users = {};
 
     // .. loop over dbs
-    for ( let db of dbs ) {
-        // .. open db
-        db_tmp = await new SQL_lite_3.Database( "../db/"+db, SQL_lite_3.OPEN_READWRITE );
-        // .. modify
-        await rename( db_tmp, oldName, newName );
-    }
+    for ( let db of DBs ) await rename( db, oldName, newName );
 
     console.log( oldName, " -> ", newName );
 
@@ -156,17 +176,10 @@ async function userRename ( dbs: string[], oldName: string, newName: string ) {
 
 // -- =====================================================================================
 
-async function userTimer ( dbs: string[], user: string, date: Date ) {
-
-    let db_tmp: SQL_lite_3.Database;
+async function userTimer ( DBs: SQL_lite_3.Database[], user: string, date: Date ) {
 
     // .. loop over dbs
-    for ( let db of dbs ) {
-        // .. open db
-        db_tmp = await new SQL_lite_3.Database( "../db/"+db, SQL_lite_3.OPEN_READWRITE );
-        // .. modify
-        await timer( db_tmp, user, date );
-    }
+    for ( let db of DBs ) await timer( db, user, date );
 
 }
 
@@ -258,8 +271,8 @@ async function timer ( db: SQL_lite_3.Database, user: string, date: Date ) {
 
         let qry: string;
 
-        qry = "UPDATE inbounds SET expiry_time=" + 
-            date.getTime() + 
+        qry = "UPDATE inbounds SET expiry_time=" +
+            date.getTime() +
             " WHERE remark LIKE '" + user + " PPS%'";
 
         // .. Read Query
@@ -475,41 +488,35 @@ async function resetIDs ( db: SQL_lite_3.Database, start: number, end: number ):
 
 // -- =====================================================================================
 
-async function refreshTable ( dbs: string[] ) {
+async function refreshTable ( DBs: SQL_lite_3.Database[] ) {
 
     let qry_1: string, qry_2: string, qry_3: string, qry_4: string;
-    let db_tmp: SQL_lite_3.Database;
 
     qry_1 = "CREATE TABLE `inbounds_tmp` (`id` integer,`user_id` integer,`up` integer,`down` integer,`total` integer,`remark` text,`enable` numeric,`expiry_time` integer,`listen` text,`port` integer UNIQUE,`protocol` text,`settings` text,`stream_settings` text,`tag` text UNIQUE,`sniffing` text,PRIMARY KEY (`id`))";
     qry_2 = "INSERT INTO inbounds_tmp SELECT * FROM inbounds";
     qry_3 = "DROP TABLE inbounds";
     qry_4 = "ALTER TABLE `inbounds_tmp` RENAME TO `inbounds`";
 
-    for ( let db of dbs ) {
-        db_tmp = await new SQL_lite_3.Database( "../db/"+db, SQL_lite_3.OPEN_READWRITE )
+    for ( let db of DBs ) {
         // .. Neue Tabellen erstellen
-        await syncQry ( db_tmp, qry_1 );
+        await syncQry ( db, qry_1 );
         // .. Kopieren von Daten
-        await syncQry ( db_tmp, qry_2 );
+        await syncQry ( db, qry_2 );
         // .. Tabellen löschen
-        await syncQry ( db_tmp, qry_3 );
+        await syncQry ( db, qry_3 );
         // .. Tabellen umbenennen
-        await syncQry ( db_tmp, qry_4 );
+        await syncQry ( db, qry_4 );
     }
 
 }
 
 // -- =====================================================================================
 
-async function removeUser ( dbs: string[], user: string ) {
+async function removeUser ( DBs: SQL_lite_3.Database[], user: string ) {
 
     let qry = "DELETE FROM inbounds WHERE remark LIKE '" + user + " PPS%'";
-    let db_tmp: SQL_lite_3.Database;
 
-    for ( let db of dbs ) {
-        db_tmp = await new SQL_lite_3.Database( "../db/"+db, SQL_lite_3.OPEN_READWRITE )
-        await syncQry( db_tmp, qry );
-    }
+    for ( let db of DBs ) await syncQry( db, qry );
 
     console.log( `Nutzer: ${user} :: wurde gelöscht!` );
 
@@ -554,15 +561,11 @@ async function syncQry ( db: SQL_lite_3.Database, qry: string ): Promise<TS.CNX[
 
 // -- =====================================================================================
 
-async function resetTraffic ( dbs: string[] ) {
+async function resetTraffic ( DBs: SQL_lite_3.Database[] ) {
 
     let qry = "UPDATE inbounds SET up=0, down=0";
-    let db_tmp: SQL_lite_3.Database;
 
-    for ( let db of dbs ) {
-        db_tmp = await new SQL_lite_3.Database( "../db/"+db, SQL_lite_3.OPEN_READWRITE )
-        await syncQry( db_tmp, qry );
-    }
+    for ( let db of DBs ) await syncQry( db, qry );
 
     console.log( `All Traffics has been RESET!` );
 
