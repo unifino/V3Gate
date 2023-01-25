@@ -12,11 +12,12 @@ import { ARGv }                         from "./ARGv"
 let now = new Date().getTime();
 let hourFactor = 60*1000*60;
 let dayFactor = hourFactor*24;
+let iDBbs = [1,2,3];
 
 let dbs = [
     'x-ui_1.db',
-    'x-ui_3.db',
-    'x-ui_4.db'
+    'x-ui_2.db',
+    'x-ui_3.db'
 ];
 let refreshCmd = "~/Documents/VPS/Download.sh";
 let uploadCmd = "~/Documents/VPS/Update.sh";
@@ -31,20 +32,24 @@ init();
 async function init () {
 
     await ARGvController();
+    await resetTraffic( dbs );
+    // await userRename( dbs, "Fa X1", "Fox X1" );
+    // await userRename( dbs, "FA X2", "Fox X2" );
+    // await removeUser( dbs, "T~T" );
 
-    // await userRename( dbs, "Barani", "Fa X1" );
+    // await userTimer( dbs, "Hosseyni", new Date( 2023,1,22,0,0 ) )
 
-    // await userTimer( dbs, "Rasul X6", new Date( 2023,2,15,0,0 ) )
-    // .then( msg => console.log( msg ) )
-    // .catch( e => console.log( "err:", e ) );
+    // refreshTable( dbs );
+    await new Promise( _ => setTimeout( _ , 500 ) );
+    // await newTempUser();
+    // await new Promise( _ => setTimeout( _ , 500 ) );
+    // await userRename( dbs, "TMP", "Hashemi" );
+    // await new Promise( _ => setTimeout( _ , 500 ) );
+    // await userTimer( dbs, "Mohsen", new Date( 2023,1,25,0,0 ) )
+    // await new Promise( _ => setTimeout( _ , 500 ) );
 
-    // removeUser( dbs, "TMP" );
-    // removeUser( dbs, "TMP" );
-    newTempUser();
+    let oldDBs = dbs.reduce( (x,i) => [ ...x, "BackUP/"+i+".bak" ] ,[] );
 
-    return;
-
-    let oldDBs = dbs.reduce( (x,i) => [ ...x, i+".bak" ] ,[] );
     let report = reporter( await grouper ( dbs ), await grouper ( oldDBs ) );
     console.clear();
     console.log(report);
@@ -60,7 +65,7 @@ async function ARGvController () {
     if ( ARGv.clear ) console.clear();
 
     // .. (Full)Refreshing Command
-    if ( ARGv.refresh || ARGv.fullRefresh ) {
+    if ( (ARGv.refresh || ARGv.fullRefresh) && !ARGv.noRefresh ) {
         let append = (ARGv.f === "Full") || ARGv.fullRefresh ? " y" : "";
         await runShellCmd( refreshCmd + append );
     }
@@ -81,7 +86,7 @@ function info ( groups: TS.Users, oldData?: TS.Users ): TS.Table {
         downloadAmount = 0;
         validFor = "                                ";
         validFor = "::::::::: | ::::::::::::::::::::";
-        validFor = "          |                 ";
+        validFor = "          |             ";
         days = 0;
 
         for ( let c of groups[ group ] ) downloadAmount += c.down;
@@ -89,7 +94,7 @@ function info ( groups: TS.Users, oldData?: TS.Users ): TS.Table {
             days = (groups[ group ][0].expiry_time-now) / dayFactor |0;
             validFor = days + " Day(s) | ";
             validFor += new Date( groups[ group ][0].expiry_time ).toString()
-            .split( " " ).filter( (x,i) => [1,2,4].includes(i) )
+            .split( " " ).filter( (x,i) => iDBbs.includes(i) )
             // .. put Day at begging
             .sort( x => x.length === 2 ? -1:1 )
             .join( " " )
@@ -294,7 +299,9 @@ function reporter ( groups: TS.Users, oldGroups: TS.Users ) {
 
     // .. Berechnung der Differenz
     for ( let row of table ) {
-        row.Diff = row.usage - oldTable.find( x => x.Name === row.Name ).usage;
+        try {
+            row.Diff = row.usage - oldTable.find( x => x.Name === row.Name ).usage;
+        }  catch (e) { row.Diff = 0; }
         row.Diff /= 1024*1024;
         row.Diff = row.Diff | 0;
         if ( !row.Diff ) row.Diff = <any>"";
@@ -383,15 +390,22 @@ async function newTempUser () {
     let db_1 = await new SQL_lite_3.Database( "../db/x-ui_1.db", SQL_lite_3.OPEN_READWRITE );
     let db_demo = await new SQL_lite_3.Database( "../db/TMO.db.demo", SQL_lite_3.OPEN_READWRITE );
     let qry:string;
-    let iDBbs = [1,3,4];
+    let aPort: number;
 
     // .. Letzte ID erhalten
     let lastID = await getLastID( db_1 );
     let newCNXs_count = await getCount( db_demo );
 
+    let myPorts = await newPorts( db_1, newCNXs_count );
+
     // .. IDs der Demo-Datenbank aktualisieren
     for ( let i=1;i<=newCNXs_count;i++ ) {
-        qry = `UPDATE inbounds SET id=${(i+lastID)} WHERE id=${i}`;
+        aPort = myPorts.pop();
+        qry = `UPDATE inbounds SET
+            id=${(i+lastID)},
+            port="${aPort}",
+            tag="inbound-${aPort}"
+            WHERE id=${i}`;
         await syncQry( db_demo, qry );
     }
 
@@ -399,7 +413,7 @@ async function newTempUser () {
     for ( let i of iDBbs ) {
         qry = "ATTACH DATABASE 'file:./../../db/x-ui_" + i + ".db' AS db" + i;
         await syncQry( db_demo, qry );
-        qry = `INSERT INTO db${i}.inbounds SELECT * FROM inbounds WHERE id<=${(lastID+12)}`
+        qry = `INSERT INTO db${i}.inbounds SELECT * FROM inbounds WHERE id<=${(lastID+19)}`
         await syncQry( db_demo, qry );
     }
 
@@ -461,6 +475,32 @@ async function resetIDs ( db: SQL_lite_3.Database, start: number, end: number ):
 
 // -- =====================================================================================
 
+async function refreshTable ( dbs: string[] ) {
+
+    let qry_1: string, qry_2: string, qry_3: string, qry_4: string;
+    let db_tmp: SQL_lite_3.Database;
+
+    qry_1 = "CREATE TABLE `inbounds_tmp` (`id` integer,`user_id` integer,`up` integer,`down` integer,`total` integer,`remark` text,`enable` numeric,`expiry_time` integer,`listen` text,`port` integer UNIQUE,`protocol` text,`settings` text,`stream_settings` text,`tag` text UNIQUE,`sniffing` text,PRIMARY KEY (`id`))";
+    qry_2 = "INSERT INTO inbounds_tmp SELECT * FROM inbounds";
+    qry_3 = "DROP TABLE inbounds";
+    qry_4 = "ALTER TABLE `inbounds_tmp` RENAME TO `inbounds`";
+
+    for ( let db of dbs ) {
+        db_tmp = await new SQL_lite_3.Database( "../db/"+db, SQL_lite_3.OPEN_READWRITE )
+        // .. Neue Tabellen erstellen
+        await syncQry ( db_tmp, qry_1 );
+        // .. Kopieren von Daten
+        await syncQry ( db_tmp, qry_2 );
+        // .. Tabellen löschen
+        await syncQry ( db_tmp, qry_3 );
+        // .. Tabellen umbenennen
+        await syncQry ( db_tmp, qry_4 );
+    }
+
+}
+
+// -- =====================================================================================
+
 async function removeUser ( dbs: string[], user: string ) {
 
     let qry = "DELETE FROM inbounds WHERE remark LIKE '" + user + " PPS%'";
@@ -477,7 +517,30 @@ async function removeUser ( dbs: string[], user: string ) {
 
 // -- =====================================================================================
 
-async function syncQry ( db: SQL_lite_3.Database, qry: string ) {
+async function newPorts ( db: SQL_lite_3.Database, qty: number ): Promise<number[]> {
+
+    let qry = "SELECT port FROM inbounds";
+    let rows = await syncQry( db, qry );
+    let ports: number[] = rows.reduce( (c,i) => { c.push(i.port); return c; }, [] );
+    let randPorts: number[] = [];
+    let aNewPort: number;
+
+    do {
+        aNewPort = Math.floor( Math.random() * 65535 );
+        if ( !ports.includes( aNewPort ) ) {
+            ports.push( aNewPort );
+            randPorts.push( aNewPort );
+        }
+    }
+    while ( randPorts.length < qty )
+
+    return randPorts;
+
+}
+
+// -- =====================================================================================
+
+async function syncQry ( db: SQL_lite_3.Database, qry: string ): Promise<TS.CNX[]> {
     return new Promise( (rs, rx) => {
         db.all( qry, (e, rows:TS.CNX[]) => {
             if (e) {
@@ -487,6 +550,22 @@ async function syncQry ( db: SQL_lite_3.Database, qry: string ) {
             else rs( rows )
         } );
     } );
+}
+
+// -- =====================================================================================
+
+async function resetTraffic ( dbs: string[] ) {
+
+    let qry = "UPDATE inbounds SET up=0, down=0";
+    let db_tmp: SQL_lite_3.Database;
+
+    for ( let db of dbs ) {
+        db_tmp = await new SQL_lite_3.Database( "../db/"+db, SQL_lite_3.OPEN_READWRITE )
+        await syncQry( db_tmp, qry );
+    }
+
+    console.log( `All Traffics has been RESET!` );
+
 }
 
 // -- =====================================================================================

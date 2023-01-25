@@ -47,6 +47,12 @@ export const ARGv: TS.ARGv = ARGvs
     type: Boolean
 } )
 
+.option( 'noRefresh', {
+    alias: 'x',
+    description: 'Refuse to Refreshing DBs',
+    type: Boolean
+} )
+
 .help().alias( 'help', 'h' )
 
 .parse();

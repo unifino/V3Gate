@@ -1,14 +1,16 @@
 export type ARGv = {
-    clear: boolean,
-    sort: "usage"|"user"|"valid"|"activity",
-    all: boolean,
-    refresh: "justDBs"|"Full",
-    fullRefresh: boolean,
-    c: boolean,
-    s: "usage"|"user"|"valid",
-    a: boolean,
-    f: "justDBs"|"Full"
-    F: boolean
+    clear:        boolean,
+    sort:         "usage"|"user"|"valid"|"activity",
+    all:          boolean,
+    refresh:      "justDBs"|"Full",
+    fullRefresh:  boolean,
+    noRefresh:    boolean,
+    c:            boolean,
+    s:            "usage"|"user"|"valid",
+    a:            boolean,
+    f:            "justDBs"|"Full"
+    F:            boolean,
+    x:            boolean
 }
 
 export type CNX = {

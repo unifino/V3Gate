@@ -19,10 +19,11 @@ const ARGv_1 = require("./ARGv");
 let now = new Date().getTime();
 let hourFactor = 60 * 1000 * 60;
 let dayFactor = hourFactor * 24;
+let iDBbs = [1, 2, 3];
 let dbs = [
     'x-ui_1.db',
-    'x-ui_3.db',
-    'x-ui_4.db'
+    'x-ui_2.db',
+    'x-ui_3.db'
 ];
 let refreshCmd = "~/Documents/VPS/Download.sh";
 let uploadCmd = "~/Documents/VPS/Update.sh";
@@ -33,11 +34,18 @@ init();
 function init() {
     return __awaiter(this, void 0, void 0, function* () {
         yield ARGvController();
-        // await userRename( dbs, "Barani", "Fa X1" );
-        // await userTimer( dbs, "Rasul X6", new Date( 2023,2,15,0,0 ) )
-        // .then( msg => console.log( msg ) )
-        // .catch( e => console.log( "err:", e ) );
-        // newTempUser();
+        // await userRename( dbs, "Fa X1", "Fox X1" );
+        // await userRename( dbs, "FA X2", "Fox X2" );
+        // await removeUser( dbs, "T~T" );
+        // await userTimer( dbs, "Hosseyni", new Date( 2023,1,22,0,0 ) )
+        // refreshTable( dbs );
+        // await new Promise( _ => setTimeout( _ , 500 ) );
+        // await newTempUser();
+        // await new Promise( _ => setTimeout( _ , 500 ) );
+        // await userRename( dbs, "TMP", "Hashemi" );
+        // await new Promise( _ => setTimeout( _ , 500 ) );
+        // await userTimer( dbs, "Mohsen", new Date( 2023,1,25,0,0 ) )
+        // await new Promise( _ => setTimeout( _ , 500 ) );
         let oldDBs = dbs.reduce((x, i) => [...x, i + ".bak"], []);
         let report = reporter(yield grouper(dbs), yield grouper(oldDBs));
         console.clear();
@@ -51,7 +59,7 @@ function ARGvController() {
         if (ARGv_1.ARGv.clear)
             console.clear();
         // .. (Full)Refreshing Command
-        if (ARGv_1.ARGv.refresh || ARGv_1.ARGv.fullRefresh) {
+        if ((ARGv_1.ARGv.refresh || ARGv_1.ARGv.fullRefresh) && !ARGv_1.ARGv.noRefresh) {
             let append = (ARGv_1.ARGv.f === "Full") || ARGv_1.ARGv.fullRefresh ? " y" : "";
             yield runShellCmd(refreshCmd + append);
         }
@@ -67,7 +75,7 @@ function info(groups, oldData) {
         downloadAmount = 0;
         validFor = "                                ";
         validFor = "::::::::: | ::::::::::::::::::::";
-        validFor = "          |                 ";
+        validFor = "          |             ";
         days = 0;
         for (let c of groups[group])
             downloadAmount += c.down;
@@ -75,7 +83,7 @@ function info(groups, oldData) {
             days = (groups[group][0].expiry_time - now) / dayFactor | 0;
             validFor = days + " Day(s) | ";
             validFor += new Date(groups[group][0].expiry_time).toString()
-                .split(" ").filter((x, i) => [1, 2, 4].includes(i))
+                .split(" ").filter((x, i) => iDBbs.includes(i))
                 // .. put Day at begging
                 .sort(x => x.length === 2 ? -1 : 1)
                 .join(" ");
@@ -196,7 +204,7 @@ function timer(db, user, date) {
             let qry;
             qry = "UPDATE inbounds SET expiry_time=" +
                 date.getTime() +
-                " where remark LIKE '" + user + " PPS%'";
+                " WHERE remark LIKE '" + user + " PPS%'";
             // .. Read Query
             db.all(qry, (e) => {
                 // .. report any error
@@ -229,11 +237,10 @@ function reporter(groups, oldGroups) {
     // .. Berechnung der Differenz
     for (let row of table) {
         try {
-            // .. Es ist möglich, dass der Benutzer nicht auf allen Servern verfügbar ist.
             row.Diff = row.usage - oldTable.find(x => x.Name === row.Name).usage;
         }
         catch (e) {
-            row.Diff = -100000000;
+            row.Diff = 0;
         }
         row.Diff /= 1024 * 1024;
         row.Diff = row.Diff | 0;
@@ -302,63 +309,36 @@ function myTable(table) {
 function newTempUser() {
     return __awaiter(this, void 0, void 0, function* () {
         let db_1 = yield new SQL_lite_3.Database("../db/x-ui_1.db", SQL_lite_3.OPEN_READWRITE);
-        // let db_2 = await new SQL_lite_3.Database( "../db/x-ui_2.db", SQL_lite_3.OPEN_READWRITE );
-        let db_3 = yield new SQL_lite_3.Database("../db/x-ui_3.db", SQL_lite_3.OPEN_READWRITE);
-        let db_4 = yield new SQL_lite_3.Database("../db/x-ui_4.db", SQL_lite_3.OPEN_READWRITE);
         let db_demo = yield new SQL_lite_3.Database("../db/TMO.db.demo", SQL_lite_3.OPEN_READWRITE);
         let qry;
+        let aPort;
         // .. Letzte ID erhalten
         let lastID = yield getLastID(db_1);
         let newCNXs_count = yield getCount(db_demo);
+        let myPorts = yield newPorts(db_1, newCNXs_count);
         // .. IDs der Demo-Datenbank aktualisieren
         for (let i = 1; i <= newCNXs_count; i++) {
-            qry = "UPDATE inbounds SET id=" + (i + lastID) + " WHERE id=" + i;
-            db_demo.all(qry, e => { if (e)
-                console.log(e); });
+            aPort = myPorts.pop();
+            qry = `UPDATE inbounds SET
+            id=${(i + lastID)},
+            port="${aPort}",
+            tag="inbound-${aPort}"
+            WHERE id=${i}`;
+            yield syncQry(db_demo, qry);
         }
-        // ! ----------- überdenken
-        yield new Promise(_ => setTimeout(_, 1000));
-        // .. BDs anhängen
-        qry = `ATTACH DATABASE 'file:./../../db/x-ui_1.db' AS db1;
-           ATTACH DATABASE 'file:./../../db/x-ui_3.db' AS db3;
-           ATTACH DATABASE 'file:./../../db/x-ui_4.db' AS db4;`;
-        db_demo.all(qry, e => { if (e)
-            console.log(e); });
-        // ! ----------- überdenken
-        yield new Promise(_ => setTimeout(_, 1000));
-        qry = `INSERT INTO db1.inbounds SELECT * FROM inbounds;
-           INSERT INTO db3.inbounds SELECT * FROM inbounds;
-           INSERT INTO db4.inbounds SELECT * FROM inbounds;`;
-        db_demo.all(qry, (e) => { if (e)
-            console.log(e); });
-        // ! ----------- überdenken
-        yield new Promise(_ => setTimeout(_, 1000));
+        // .. BDs anhängen und Hinzufügen von Benutzern
+        for (let i of iDBbs) {
+            qry = "ATTACH DATABASE 'file:./../../db/x-ui_" + i + ".db' AS db" + i;
+            yield syncQry(db_demo, qry);
+            qry = `INSERT INTO db${i}.inbounds SELECT * FROM inbounds WHERE id<=${(lastID + 19)}`;
+            yield syncQry(db_demo, qry);
+        }
         // .. IDs der Demo-Datenbank zurücksetzen
         for (let i = 1; i <= newCNXs_count; i++) {
             qry = "UPDATE inbounds SET id=" + i + " WHERE id=" + (i + lastID);
-            db_demo.all(qry, e => { if (e)
-                console.log(e); });
+            yield syncQry(db_demo, qry);
         }
-        // qry = "ATTACH DATABASE 'file:./../../db/x-ui_4.db' AS db4";
-        // db_tmp_3.all( qry, (e) => {
-        //     console.log(e);
-        //     qry = "INSERT INTO db4.inbounds SELECT * FROM inbounds WHERE id>=64";
-        //     db_tmp_3.all( qry, (e) => {
-        //         console.log(e);
-        //         console.log("2Done");
-        //     } );
-        // } );
-        // await new Promise( _ => setTimeout( _, 100 ) );
-        // for ( let i=74;i<78;i++ ) {
-        //     qry = "UPDATE inbounds SET up=0, down=0 WHERE id="+i;
-        //     db_tmp_1.all( qry , (e) => console.log(e) );
-        //     db_tmp_4.all( qry , (e) => console.log(e) );
-        // }
-        // await new Promise( _ => setTimeout( _, 100 ) );
-        // for ( let i=74;i<79;i++ ) {
-        //     qry = "UPDATE inbounds SET id=id-6 WHERE id="+i;
-        //     db_tmp_1.all( qry );
-        // }
+        console.log("Neue Benutzer wurden hinzugefügt");
     });
 }
 // -- =====================================================================================
@@ -394,6 +374,73 @@ function resetIDs(db, start, end) {
             //     db.all( qry, (e, rows: TS.CNX[]) => {
             //         !e ? rs(rows[0].id) : rx(e);
             //     } )
+        });
+    });
+}
+// -- =====================================================================================
+function refreshTable(dbs) {
+    return __awaiter(this, void 0, void 0, function* () {
+        let qry_1, qry_2, qry_3, qry_4;
+        let db_tmp;
+        qry_1 = "CREATE TABLE `inbounds_tmp` (`id` integer,`user_id` integer,`up` integer,`down` integer,`total` integer,`remark` text,`enable` numeric,`expiry_time` integer,`listen` text,`port` integer UNIQUE,`protocol` text,`settings` text,`stream_settings` text,`tag` text UNIQUE,`sniffing` text,PRIMARY KEY (`id`))";
+        qry_2 = "INSERT INTO inbounds_tmp SELECT * FROM inbounds";
+        qry_3 = "DROP TABLE inbounds";
+        qry_4 = "ALTER TABLE `inbounds_tmp` RENAME TO `inbounds`";
+        for (let db of dbs) {
+            db_tmp = yield new SQL_lite_3.Database("../db/" + db, SQL_lite_3.OPEN_READWRITE);
+            // .. Neue Tabellen erstellen
+            yield syncQry(db_tmp, qry_1);
+            // .. Kopieren von Daten
+            yield syncQry(db_tmp, qry_2);
+            // .. Tabellen löschen
+            yield syncQry(db_tmp, qry_3);
+            // .. Tabellen umbenennen
+            yield syncQry(db_tmp, qry_4);
+        }
+    });
+}
+// -- =====================================================================================
+function removeUser(dbs, user) {
+    return __awaiter(this, void 0, void 0, function* () {
+        let qry = "DELETE FROM inbounds WHERE remark LIKE '" + user + " PPS%'";
+        let db_tmp;
+        for (let db of dbs) {
+            db_tmp = yield new SQL_lite_3.Database("../db/" + db, SQL_lite_3.OPEN_READWRITE);
+            yield syncQry(db_tmp, qry);
+        }
+        console.log(`Nutzer: ${user} :: wurde gelöscht!`);
+    });
+}
+// -- =====================================================================================
+function newPorts(db, qty) {
+    return __awaiter(this, void 0, void 0, function* () {
+        let qry = "SELECT port FROM inbounds";
+        let rows = yield syncQry(db, qry);
+        let ports = rows.reduce((c, i) => { c.push(i.port); return c; }, []);
+        let randPorts = [];
+        let aNewPort;
+        do {
+            aNewPort = Math.floor(Math.random() * 65535);
+            if (!ports.includes(aNewPort)) {
+                ports.push(aNewPort);
+                randPorts.push(aNewPort);
+            }
+        } while (randPorts.length < qty);
+        return randPorts;
+    });
+}
+// -- =====================================================================================
+function syncQry(db, qry) {
+    return __awaiter(this, void 0, void 0, function* () {
+        return new Promise((rs, rx) => {
+            db.all(qry, (e, rows) => {
+                if (e) {
+                    rx(e);
+                    console.log(e);
+                }
+                else
+                    rs(rows);
+            });
         });
     });
 }

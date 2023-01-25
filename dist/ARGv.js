@@ -40,6 +40,11 @@ exports.ARGv = ARGvs
     description: 'Refreshing DBs including BackedUp ones',
     type: Boolean
 })
+    .option('noRefresh', {
+    alias: 'x',
+    description: 'Refuse to Refreshing DBs',
+    type: Boolean
+})
     .help().alias('help', 'h')
     .parse();
 //# sourceMappingURL=ARGv.js.map
