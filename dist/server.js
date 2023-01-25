@@ -29,8 +29,8 @@ let iDBbs = dbs_name.reduce((x, i) => {
     return x;
 }, []);
 let DBs = [];
-let downloadCmd = "~/Documents/VPS/Files/Download.sh";
-let uploadCmd = "~/Documents/VPS/Files/Update.sh";
+let downloadCmd = "../Files/Download.sh";
+let uploadCmd = "../Files/Update.sh";
 // -- =====================================================================================
 init();
 // -- =====================================================================================
@@ -68,7 +68,7 @@ function DBs_Loader(dbs_name) {
         let db_address;
         let myDBs = [];
         for (let db_name of dbs_name) {
-            db_address = `../db/${db_name}`;
+            db_address = `./db/${db_name}`;
             db_tmp = yield new SQL_lite_3.Database(db_address, SQL_lite_3.OPEN_READWRITE);
             myDBs.push(db_tmp);
         }

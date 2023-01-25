@@ -24,8 +24,8 @@ let iDBbs = dbs_name.reduce( (x,i) => {
 
 
 let DBs: SQL_lite_3.Database[] = [];
-let downloadCmd = "~/Documents/VPS/Files/Download.sh";
-let uploadCmd = "~/Documents/VPS/Files/Update.sh";
+let downloadCmd = "./Files/Download.sh";
+let uploadCmd = "./Files/Update.sh";
 
 // -- =====================================================================================
 
@@ -75,7 +75,7 @@ async function DBs_Loader ( dbs_name: string[] ): Promise<SQL_lite_3.Database[]>
     let myDBs: SQL_lite_3.Database[] = [];
 
     for ( let db_name of dbs_name ) {
-        db_address = `../db/${db_name}`;
+        db_address = `./db/${db_name}`;
         db_tmp = await new SQL_lite_3.Database( db_address, SQL_lite_3.OPEN_READWRITE );
         myDBs.push ( db_tmp );
     }
