@@ -5,12 +5,14 @@ export type ARGv = {
     refresh:      "justDBs"|"Full",
     fullRefresh:  boolean,
     noRefresh:    boolean,
+    update:       boolean,
     c:            boolean,
     s:            "usage"|"user"|"valid",
     a:            boolean,
     f:            "justDBs"|"Full"
     F:            boolean,
-    x:            boolean
+    x:            boolean,
+    U:            boolean
 }
 
 export type CNX = {

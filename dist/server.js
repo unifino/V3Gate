@@ -29,7 +29,7 @@ let iDBbs = dbs_name.reduce((x, i) => {
     return x;
 }, []);
 let DBs = [];
-let refreshCmd = "~/Documents/VPS/Files/Download.sh";
+let downloadCmd = "~/Documents/VPS/Files/Download.sh";
 let uploadCmd = "~/Documents/VPS/Files/Update.sh";
 // -- =====================================================================================
 init();
@@ -43,7 +43,7 @@ function init() {
         let dbs_bak_name = dbs_name.reduce((x, i) => [...x, "BackUP/" + i + ".bak"], []);
         let DBs_bak = yield DBs_Loader(dbs_bak_name);
         ;
-        // await userTimer( DBs, "Hosseyni", new Date( 2023,1,22,0,0 ) )
+        // await userTimer( DBs, "Hashemi", new Date( 2023,3,26,0,0 ) )
         // await resetTraffic( DBs );
         // await userRename( DBs, "Fa X1", "Fox X1" );
         // await userRename( DBs, "FA X2", "Fox X2" );
@@ -59,6 +59,8 @@ function init() {
         // await new Promise( _ => setTimeout( _ , 500 ) );
         let report = reporter(yield grouper(DBs), yield grouper(DBs_bak));
         console.log(report);
+        if ((ARGv_1.ARGv.update || ARGv_1.ARGv.U) && !ARGv_1.ARGv.x)
+            runShellCmd(uploadCmd);
     });
 }
 // -- =====================================================================================
@@ -84,7 +86,7 @@ function ARGvController() {
         // .. (Full)Refreshing Command
         if ((ARGv_1.ARGv.refresh || ARGv_1.ARGv.fullRefresh) && !ARGv_1.ARGv.noRefresh) {
             let append = (ARGv_1.ARGv.f === "Full") || ARGv_1.ARGv.fullRefresh ? " y" : "";
-            yield runShellCmd(refreshCmd + append);
+            yield runShellCmd(downloadCmd + append);
         }
     });
 }

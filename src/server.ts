@@ -24,7 +24,7 @@ let iDBbs = dbs_name.reduce( (x,i) => {
 
 
 let DBs: SQL_lite_3.Database[] = [];
-let refreshCmd = "~/Documents/VPS/Files/Download.sh";
+let downloadCmd = "~/Documents/VPS/Files/Download.sh";
 let uploadCmd = "~/Documents/VPS/Files/Update.sh";
 
 // -- =====================================================================================
@@ -42,9 +42,9 @@ async function init () {
     // await new Promise( _ => setTimeout( _ , 500 ) );
 
     let dbs_bak_name = dbs_name.reduce( (x,i) => [ ...x, "BackUP/"+i+".bak" ] ,[] );
-    let DBs_bak = await DBs_Loader( dbs_bak_name );;
+    let DBs_bak = await DBs_Loader( dbs_bak_name );
 
-    // await userTimer( DBs, "Hosseyni", new Date( 2023,1,22,0,0 ) )
+    // await userTimer( DBs, "Hashemi", new Date( 2023,3,26,0,0 ) )
     // await resetTraffic( DBs );
     // await userRename( DBs, "Fa X1", "Fox X1" );
     // await userRename( DBs, "FA X2", "Fox X2" );
@@ -63,6 +63,8 @@ async function init () {
 
     let report = reporter( await grouper ( DBs ), await grouper ( DBs_bak ) );
     console.log(report);
+
+    if ( ( ARGv.update || ARGv.U ) && !ARGv.x ) runShellCmd( uploadCmd );
 
 }
 
@@ -94,7 +96,7 @@ async function ARGvController () {
     // .. (Full)Refreshing Command
     if ( (ARGv.refresh || ARGv.fullRefresh) && !ARGv.noRefresh ) {
         let append = (ARGv.f === "Full") || ARGv.fullRefresh ? " y" : "";
-        await runShellCmd( refreshCmd + append );
+        await runShellCmd( downloadCmd + append );
     }
 
 }
