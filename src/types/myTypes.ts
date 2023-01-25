@@ -1,6 +1,10 @@
 export type ARGv = {
     clear:        boolean,
     sort:         "usage"|"user"|"valid"|"activity",
+    sc:           boolean,
+    su:           boolean,
+    sv:           boolean,
+    sa:           boolean,
     all:          boolean,
     refresh:      "justDBs"|"Full",
     fullRefresh:  boolean,
@@ -9,7 +13,7 @@ export type ARGv = {
     c:            boolean,
     s:            "usage"|"user"|"valid",
     a:            boolean,
-    f:            "justDBs"|"Full"
+    f:            "justDBs"|"Full",
     F:            boolean,
     x:            boolean,
     U:            boolean

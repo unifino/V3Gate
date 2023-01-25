@@ -26,7 +26,31 @@ export const ARGv: TS.ARGv = ARGvs
 .option( 'sort', {
     alias: 's',
     description: 'Sort result by ...',
-    type: [ 'Usage', 'User', 'valid' ]
+    type: [ 'Usage', 'User', 'Valid', 'Activity' ]
+} )
+
+.option( 'sortUsage', {
+    alias: 'sc',
+    description: 'Sort result by TotalUsage',
+    type: Boolean
+} )
+
+.option( 'sortUser', {
+    alias: 'su',
+    description: 'Sort result by userName',
+    type: Boolean
+} )
+
+.option( 'sortActivity', {
+    alias: 'sa',
+    description: 'Sort result by recentActivity',
+    type: Boolean
+} )
+
+.option( 'sortValid', {
+    alias: 'sv',
+    description: 'Sort result by validTime',
+    type: Boolean
 } )
 
 .option( 'all', {

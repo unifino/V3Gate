@@ -39,20 +39,18 @@ async function init () {
     await ARGvController();
 
     DBs = await DBs_Loader( dbs_name );
-    // await new Promise( _ => setTimeout( _ , 500 ) );
 
     let dbs_bak_name = dbs_name.reduce( (x,i) => [ ...x, "BackUP/"+i+".bak" ] ,[] );
     let DBs_bak = await DBs_Loader( dbs_bak_name );
 
     // await userTimer( DBs, "Hashemi", new Date( 2023,3,26,0,0 ) )
+    // await new Promise( _ => setTimeout( _ , 500 ) );
+
     // await resetTraffic( DBs );
-    // await userRename( DBs, "Fa X1", "Fox X1" );
-    // await userRename( DBs, "FA X2", "Fox X2" );
+    // await new Promise( _ => setTimeout( _ , 500 ) );
     // await removeUser( DBs, "T~T" );
-
-    // await userTimer( DBs, "Hosseyni", new Date( 2023,1,22,0,0 ) )
-
-    // refreshTable( DBs );
+    // await new Promise( _ => setTimeout( _ , 500 ) );
+    // await refreshTable( DBs );
     // await new Promise( _ => setTimeout( _ , 500 ) );
     // await newTempUser();
     // await new Promise( _ => setTimeout( _ , 500 ) );
@@ -99,6 +97,11 @@ async function ARGvController () {
         await runShellCmd( downloadCmd + append );
     }
 
+    if ( ARGv.sa ) ARGv.sort = "activity";
+    if ( ARGv.sc ) ARGv.sort = "usage";
+    if ( ARGv.sv ) ARGv.sort = "valid";
+    if ( ARGv.su ) ARGv.sort = "user";
+
 }
 
 // -- =====================================================================================
@@ -128,6 +131,7 @@ function info ( groups: TS.Users, oldData?: TS.Users ): TS.Table {
             .sort( x => x.length === 2 ? -1:1 )
             .join( " " )
         }
+        else days = null;
 
         if ( days<0 ) validFor = "--------- | -----------";
 
@@ -325,6 +329,7 @@ function reporter ( groups: TS.Users, oldGroups: TS.Users ) {
 
         case "valid":
             table = table.sort( (a,b)=> a.Days > b.Days ? 1:-1 );
+            table = table.sort( (a,b)=> a.Days === null ? -1:1 );
             break;
 
         case "activity":
