@@ -17,11 +17,8 @@ let dbs_name = [
     'x-ui_2.db',
     'x-ui_3.db'
 ];
-let iDBbs = dbs_name.reduce( (x,i) => { 
-    let id: number;
-    i = i.replace( 'x-ui_', '' );
-    i = i.replace( '.db', '' );
-    x.push( Number(i) );
+let iDBbs = dbs_name.reduce( (x,i) => {
+    x.push( Number( i.replace( 'x-ui_', '' ).replace( '.db', '' ) ) );
     return x;
 }, [] );
 
@@ -39,30 +36,32 @@ init();
 // ! MAIN ACTIONS DEFINES HERE
 async function init () {
 
+    await ARGvController();
+
     DBs = await DBs_Loader( dbs_name );
+    // await new Promise( _ => setTimeout( _ , 500 ) );
+
     let dbs_bak_name = dbs_name.reduce( (x,i) => [ ...x, "BackUP/"+i+".bak" ] ,[] );
     let DBs_bak = await DBs_Loader( dbs_bak_name );;
 
-    await ARGvController();
     // await userTimer( DBs, "Hosseyni", new Date( 2023,1,22,0,0 ) )
-    // // await resetTraffic( DBs );
-    // // await userRename( DBs, "Fa X1", "Fox X1" );
-    // // await userRename( DBs, "FA X2", "Fox X2" );
-    // // await removeUser( DBs, "T~T" );
-    
-    // // await userTimer( DBs, "Hosseyni", new Date( 2023,1,22,0,0 ) )
-    
-    // // refreshTable( DBs );
+    // await resetTraffic( DBs );
+    // await userRename( DBs, "Fa X1", "Fox X1" );
+    // await userRename( DBs, "FA X2", "Fox X2" );
+    // await removeUser( DBs, "T~T" );
+
+    // await userTimer( DBs, "Hosseyni", new Date( 2023,1,22,0,0 ) )
+
+    // refreshTable( DBs );
     // await new Promise( _ => setTimeout( _ , 500 ) );
-    // // await newTempUser();
-    // // await new Promise( _ => setTimeout( _ , 500 ) );
-    // // await userRename( DBs, "TMP", "Hashemi" );
-    // // await new Promise( _ => setTimeout( _ , 500 ) );
-    // // await userTimer( DBs, "Mohsen", new Date( 2023,1,25,0,0 ) )
-    // // await new Promise( _ => setTimeout( _ , 500 ) );
+    // await newTempUser();
+    // await new Promise( _ => setTimeout( _ , 500 ) );
+    // await userRename( DBs, "TMP", "Hadi" );
+    // await new Promise( _ => setTimeout( _ , 500 ) );
+    // await userTimer( DBs, "Hadi", new Date( 2023,1,26,0,0 ) )
+    // await new Promise( _ => setTimeout( _ , 500 ) );
 
     let report = reporter( await grouper ( DBs ), await grouper ( DBs_bak ) );
-    console.clear();
     console.log(report);
 
 }
@@ -180,6 +179,8 @@ async function userTimer ( DBs: SQL_lite_3.Database[], user: string, date: Date 
 
     // .. loop over dbs
     for ( let db of DBs ) await timer( db, user, date );
+
+    console.log( `Die Benutzer: ${user} ist bis ${date} verfügbar` );
 
 }
 
@@ -400,16 +401,15 @@ function myTable ( table: TS.Table ) {
 
 async function newTempUser () {
 
-    let db_1 = await new SQL_lite_3.Database( "../db/x-ui_1.db", SQL_lite_3.OPEN_READWRITE );
-    let db_demo = await new SQL_lite_3.Database( "../db/TMO.db.demo", SQL_lite_3.OPEN_READWRITE );
+    let db_demo = await new SQL_lite_3.Database( "../db/BackUP/TMO.db.demo", SQL_lite_3.OPEN_READWRITE );
     let qry:string;
     let aPort: number;
 
     // .. Letzte ID erhalten
-    let lastID = await getLastID( db_1 );
+    let lastID = await getLastID( DBs[0] );
     let newCNXs_count = await getCount( db_demo );
 
-    let myPorts = await newPorts( db_1, newCNXs_count );
+    let myPorts = await newPorts( DBs[0], newCNXs_count );
 
     // .. IDs der Demo-Datenbank aktualisieren
     for ( let i=1;i<=newCNXs_count;i++ ) {
@@ -446,11 +446,9 @@ async function getLastID ( db: SQL_lite_3.Database ): Promise<number>{
 
     let qry = "SELECT id FROM inbounds ORDER BY id DESC LIMIT 1";
 
-    return new Promise( (rs, rx) => {
-        db.all( qry, (e, rows: TS.CNX[]) => {
-            !e ? rs(rows[0].id) : rx(e);
-        } )
-    } )
+    let answer = await syncQry ( db, qry  )
+
+    return answer[0].id;
 
 }
 
@@ -460,11 +458,9 @@ async function getCount ( db: SQL_lite_3.Database ): Promise<number>{
 
     let qry = "SELECT id FROM inbounds";
 
-    return new Promise( (rs, rx) => {
-        db.all( qry, (e, rows: TS.CNX[]) => {
-            !e ? rs(rows.length) : rx(e);
-        } )
-    } )
+    let answer = await syncQry ( db, qry  )
+
+    return answer.length;
 
 }
 
@@ -551,8 +547,8 @@ async function syncQry ( db: SQL_lite_3.Database, qry: string ): Promise<TS.CNX[
     return new Promise( (rs, rx) => {
         db.all( qry, (e, rows:TS.CNX[]) => {
             if (e) {
-                rx(e);
-                console.log(e)
+                console.log(e, qry);
+                rx([e, qry]);
             }
             else rs( rows )
         } );
