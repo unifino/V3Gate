@@ -48,10 +48,10 @@ async function init () {
     // await removeUser( DBs, "T~T" );
     // await new Promise( _ => setTimeout( _ , 500 ) );
 
-    await refreshTable( DBs );
-    await newTempUser();
-    await userRename( DBs, "TMP", "Mohsen" );
-    await userTimer( DBs, "Mohsen", new Date( 2023,1,25,0,0 ) )
+    // await refreshTable( DBs );
+    // await newTempUser();
+    // await userRename( DBs, "TMP", "Mohsen" );
+    // await userTimer( DBs, "Mohsen", new Date( 2023,1,25,0,0 ) )
 
     let report = reporter( await grouper ( DBs ), await grouper ( DBs_bak ) );
     console.log(report);
