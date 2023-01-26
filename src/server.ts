@@ -44,20 +44,14 @@ async function init () {
     let DBs_bak = await DBs_Loader( dbs_bak_name );
 
     // await userTimer( DBs, "Hashemi", new Date( 2023,3,26,0,0 ) )
-    // await new Promise( _ => setTimeout( _ , 500 ) );
-
     // await resetTraffic( DBs );
-    // await new Promise( _ => setTimeout( _ , 500 ) );
     // await removeUser( DBs, "T~T" );
     // await new Promise( _ => setTimeout( _ , 500 ) );
-    // await refreshTable( DBs );
-    // await new Promise( _ => setTimeout( _ , 500 ) );
-    // await newTempUser();
-    // await new Promise( _ => setTimeout( _ , 500 ) );
-    // await userRename( DBs, "TMP", "Hadi" );
-    // await new Promise( _ => setTimeout( _ , 500 ) );
-    // await userTimer( DBs, "Hadi", new Date( 2023,1,26,0,0 ) )
-    // await new Promise( _ => setTimeout( _ , 500 ) );
+
+    await refreshTable( DBs );
+    await newTempUser();
+    await userRename( DBs, "TMP", "Mohsen" );
+    await userTimer( DBs, "Mohsen", new Date( 2023,1,25,0,0 ) )
 
     let report = reporter( await grouper ( DBs ), await grouper ( DBs_bak ) );
     console.log(report);
@@ -259,7 +253,7 @@ async function rename ( db: SQL_lite_3.Database, oldName: string, newName: strin
             }
 
             // .. report any error
-            if (e) rx(e);
+            if (e) rx([e,qry]);
 
             // .. resolve
             rs( db );
@@ -286,7 +280,7 @@ async function timer ( db: SQL_lite_3.Database, user: string, date: Date ) {
         db.all( qry, ( e ) => {
 
             // .. report any error
-            if (e) rx(e);
+            if (e) rx([e,qry]);
 
             else rs( "OK? for: "  );
 
@@ -397,7 +391,7 @@ function myTable ( table: TS.Table ) {
 
 async function newTempUser () {
 
-    let db_demo = await new SQL_lite_3.Database( "../db/BackUP/TMO.db.demo", SQL_lite_3.OPEN_READWRITE );
+    let db_demo = await new SQL_lite_3.Database( "./db/BackUP/TMO.db.demo", SQL_lite_3.OPEN_READWRITE );
     let qry:string;
     let aPort: number;
 
@@ -420,7 +414,7 @@ async function newTempUser () {
 
     // .. BDs anhängen und Hinzufügen von Benutzern
     for ( let i of iDBbs ) {
-        qry = "ATTACH DATABASE 'file:./../../db/x-ui_" + i + ".db' AS db" + i;
+        qry = "ATTACH DATABASE 'file:./../db/x-ui_" + i + ".db' AS db" + i;
         await syncQry( db_demo, qry );
         qry = `INSERT INTO db${i}.inbounds SELECT * FROM inbounds WHERE id<=${(lastID+19)}`
         await syncQry( db_demo, qry );
