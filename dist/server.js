@@ -29,8 +29,8 @@ let iDBbs = dbs_name.reduce((x, i) => {
     return x;
 }, []);
 let DBs = [];
-let downloadCmd = "../Files/Download.sh";
-let uploadCmd = "../Files/Update.sh";
+let downloadCmd = "./Files/Download.sh";
+let uploadCmd = "./Files/Update.sh";
 // -- =====================================================================================
 init();
 // -- =====================================================================================
