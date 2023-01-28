@@ -43,15 +43,15 @@ async function init () {
     let dbs_bak_name = dbs_name.reduce( (x,i) => [ ...x, "BackUP/"+i+".bak" ] ,[] );
     let DBs_bak = await DBs_Loader( dbs_bak_name );
 
-    // await userTimer( DBs, "Hashemi", new Date( 2023,3,26,0,0 ) )
+    await userTimer( DBs, "Fox X2", new Date( 2023,1,28,0,0 ) )
     // await resetTraffic( DBs );
     // await removeUser( DBs, "T~T" );
     // await new Promise( _ => setTimeout( _ , 500 ) );
 
-    // await refreshTable( DBs );
-    // await newTempUser();
-    // await userRename( DBs, "TMP", "Mohsen" );
-    // await userTimer( DBs, "Mohsen", new Date( 2023,1,25,0,0 ) )
+    await refreshTable( DBs );
+    await newTempUser();
+    await userRename( DBs, "TMP", "Fox X3" );
+    await userTimer( DBs, "Fox X3", new Date( 2023,1,28,0,0 ) )
 
     let report = reporter( await grouper ( DBs ), await grouper ( DBs_bak ) );
     console.log(report);
@@ -478,7 +478,7 @@ async function refreshTable ( DBs: SQL_lite_3.Database[] ) {
 
     let qry_1: string, qry_2: string, qry_3: string, qry_4: string;
 
-    qry_1 = "CREATE TABLE `inbounds_tmp` (`id` integer,`user_id` integer,`up` integer,`down` integer,`total` integer,`remark` text,`enable` numeric,`expiry_time` integer,`listen` text,`port` integer UNIQUE,`protocol` text,`settings` text,`stream_settings` text,`tag` text UNIQUE,`sniffing` text,PRIMARY KEY (`id`))";
+    qry_1 = "CREATE TABLE `inbounds_tmp` (`id` integer,`user_id` integer,`up` integer,`down` integer,`total` integer,`remark` text,`enable` numeric,`expiry_time` integer,`listen` text,`port` integer UNIQUE,`protocol` text,`settings` text,`stream_settings` text,`tag` text UNIQUE,`sniffing` text, up_1674835094547, down_1674835094547,PRIMARY KEY (`id`))";
     qry_2 = "INSERT INTO inbounds_tmp SELECT * FROM inbounds";
     qry_3 = "DROP TABLE inbounds";
     qry_4 = "ALTER TABLE `inbounds_tmp` RENAME TO `inbounds`";
@@ -550,8 +550,17 @@ async function syncQry ( db: SQL_lite_3.Database, qry: string ): Promise<TS.CNX[
 async function resetTraffic ( DBs: SQL_lite_3.Database[] ) {
 
     let qry = "UPDATE inbounds SET up=0, down=0";
+    let append = ( new Date() ).getTime();
+    let addColumnUpQry = `ALTER TABLE inbounds ADD COLUMN up_${append}`;
+    let addColumnDownQry = `ALTER TABLE inbounds ADD COLUMN down_${append}`;
+    let copyQry = `UPDATE inbounds SET up_${append}=up, down_${append}=down`;
 
-    for ( let db of DBs ) await syncQry( db, qry );
+    for ( let db of DBs ) {
+        await syncQry( db, addColumnUpQry );
+        await syncQry( db, addColumnDownQry );
+        await syncQry( db, copyQry );
+        await syncQry( db, qry );
+    }
 
     console.log( `All Traffics has been RESET!` );
 
