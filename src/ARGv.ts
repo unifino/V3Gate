@@ -4,29 +4,24 @@ const ARGvs = require('yargs');
 
 export const ARGv: TS.ARGv = ARGvs
 
-.command( {
-    command : 'add',
-    describe: "Adding a Note",
-    builder: {
-        title : {
-            describe: 'Note Title'
-        }
-    },
-    handler: function(argv) {
-        console.log("\n Adding a New Note! ",argv.title);
-    }
-} )
+// .command( {
+//     command : 'sort',
+//     // alias: 's',
+//     description: 'Sort result by ...',
+//     type: [ 'Usage', 'User', 'Valid', 'Activity' ]
+// } )
+
+// .command( {
+//     command : 'add',
+//     describe: "Adding a Note",
+//     builder: { title : { describe: 'Note Title' } },
+//     handler: argv => { console.log( "\nAdding a New User! ", argv.name ); }
+// } )
 
 .option( 'clear', {
     alias: 'c',
     description: 'Clear Terminal',
     type: Boolean
-} )
-
-.option( 'sort', {
-    alias: 's',
-    description: 'Sort result by ...',
-    type: [ 'Usage', 'User', 'Valid', 'Activity' ]
 } )
 
 .option( 'sortUsage', {

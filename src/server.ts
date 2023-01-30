@@ -40,21 +40,14 @@ async function init () {
 
     DBs = await DBs_Loader( dbs_name );
 
-    let dbs_bak_name = dbs_name.reduce( (x,i) => [ ...x, "BackUP/"+i+".bak" ] ,[] );
-    let DBs_bak = await DBs_Loader( dbs_bak_name );
-
-    await userTimer( DBs, "Fox X2", new Date( 2023,1,28,0,0 ) )
+    await ARGvCommandsController();
+    // await userTimer( DBs, "Mojtaba", new Date( 2023,1,30,0,0 ) )
     // await resetTraffic( DBs );
     // await removeUser( DBs, "T~T" );
     // await new Promise( _ => setTimeout( _ , 500 ) );
 
-    await refreshTable( DBs );
-    await newTempUser();
-    await userRename( DBs, "TMP", "Fox X3" );
-    await userTimer( DBs, "Fox X3", new Date( 2023,1,28,0,0 ) )
+    // await userTimer( DBs, "HashemiRad", new Date( 2023,1,29,0,0 ) )
 
-    let report = reporter( await grouper ( DBs ), await grouper ( DBs_bak ) );
-    console.log(report);
 
     if ( ( ARGv.update || ARGv.U ) && !ARGv.x ) runShellCmd( uploadCmd );
 
@@ -95,6 +88,57 @@ async function ARGvController () {
     if ( ARGv.sc ) ARGv.sort = "usage";
     if ( ARGv.sv ) ARGv.sort = "valid";
     if ( ARGv.su ) ARGv.sort = "user";
+
+}
+
+// -- =====================================================================================
+
+async function ARGvCommandsController () {
+
+    const ARGvs = require('yargs');
+
+    ARGvs
+
+    .command( {
+        command: 'report',
+        handler: async argv => {
+            let dbs_bak_name = dbs_name.reduce( (x,i) => [ ...x, "BackUP/"+i+".bak" ] ,[] );
+            let DBs_bak = await DBs_Loader( dbs_bak_name );
+            let report = reporter( await grouper ( DBs ), await grouper ( DBs_bak ) );
+            console.log(report);
+        }
+    } )
+
+    .command( {
+        command : 'add',
+        describe: "Adding a New User",
+        handler: async argv => {
+            if ( !argv.name ) {
+                console.log( "Please give me a Name!! \n" );
+                return;
+            }
+            await refreshTable( DBs );
+            await newTempUser();
+            await userRename( DBs, "TMP", argv.name );
+        }
+    } )
+
+    .command( {
+        command : 'timer',
+        describe: "Set a Time for User",
+        handler: async argv => {
+            if ( !argv.name ) {
+                console.log( "Please give me the name of User!! \n" );
+                return;
+            }
+            await refreshTable( DBs );
+            await newTempUser();
+            await userRename( DBs, "TMP", argv.name );
+        }
+    } )
+
+    .parse();
+
 
 }
 

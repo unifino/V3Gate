@@ -41,20 +41,14 @@ function init() {
         DBs = yield DBs_Loader(dbs_name);
         let dbs_bak_name = dbs_name.reduce((x, i) => [...x, "BackUP/" + i + ".bak"], []);
         let DBs_bak = yield DBs_Loader(dbs_bak_name);
-        // await userTimer( DBs, "Hashemi", new Date( 2023,3,26,0,0 ) )
-        // await new Promise( _ => setTimeout( _ , 500 ) );
+        // await userTimer( DBs, "Mojtaba", new Date( 2023,1,30,0,0 ) )
         // await resetTraffic( DBs );
-        // await new Promise( _ => setTimeout( _ , 500 ) );
         // await removeUser( DBs, "T~T" );
         // await new Promise( _ => setTimeout( _ , 500 ) );
         // await refreshTable( DBs );
-        // await new Promise( _ => setTimeout( _ , 500 ) );
         // await newTempUser();
-        // await new Promise( _ => setTimeout( _ , 500 ) );
-        // await userRename( DBs, "TMP", "Hadi" );
-        // await new Promise( _ => setTimeout( _ , 500 ) );
-        // await userTimer( DBs, "Hadi", new Date( 2023,1,26,0,0 ) )
-        // await new Promise( _ => setTimeout( _ , 500 ) );
+        // await userRename( DBs, "TMP", "HashemiRad" );
+        // await userTimer( DBs, "HashemiRad", new Date( 2023,1,29,0,0 ) )
         let report = reporter(yield grouper(DBs), yield grouper(DBs_bak));
         console.log(report);
         if ((ARGv_1.ARGv.update || ARGv_1.ARGv.U) && !ARGv_1.ARGv.x)
@@ -213,7 +207,7 @@ function rename(db, oldName, newName) {
                 }
                 // .. report any error
                 if (e)
-                    rx(e);
+                    rx([e, qry]);
                 // .. resolve
                 rs(db);
             });
@@ -232,7 +226,7 @@ function timer(db, user, date) {
             db.all(qry, (e) => {
                 // .. report any error
                 if (e)
-                    rx(e);
+                    rx([e, qry]);
                 else
                     rs("OK? for: ");
             });
@@ -320,7 +314,7 @@ function myTable(table) {
 // -- =====================================================================================
 function newTempUser() {
     return __awaiter(this, void 0, void 0, function* () {
-        let db_demo = yield new SQL_lite_3.Database("../db/BackUP/TMO.db.demo", SQL_lite_3.OPEN_READWRITE);
+        let db_demo = yield new SQL_lite_3.Database("./db/BackUP/TMO.db.demo", SQL_lite_3.OPEN_READWRITE);
         let qry;
         let aPort;
         // .. Letzte ID erhalten
@@ -339,7 +333,7 @@ function newTempUser() {
         }
         // .. BDs anhängen und Hinzufügen von Benutzern
         for (let i of iDBbs) {
-            qry = "ATTACH DATABASE 'file:./../../db/x-ui_" + i + ".db' AS db" + i;
+            qry = "ATTACH DATABASE 'file:./../db/x-ui_" + i + ".db' AS db" + i;
             yield syncQry(db_demo, qry);
             qry = `INSERT INTO db${i}.inbounds SELECT * FROM inbounds WHERE id<=${(lastID + 19)}`;
             yield syncQry(db_demo, qry);
@@ -386,7 +380,7 @@ function resetIDs(db, start, end) {
 function refreshTable(DBs) {
     return __awaiter(this, void 0, void 0, function* () {
         let qry_1, qry_2, qry_3, qry_4;
-        qry_1 = "CREATE TABLE `inbounds_tmp` (`id` integer,`user_id` integer,`up` integer,`down` integer,`total` integer,`remark` text,`enable` numeric,`expiry_time` integer,`listen` text,`port` integer UNIQUE,`protocol` text,`settings` text,`stream_settings` text,`tag` text UNIQUE,`sniffing` text,PRIMARY KEY (`id`))";
+        qry_1 = "CREATE TABLE `inbounds_tmp` (`id` integer,`user_id` integer,`up` integer,`down` integer,`total` integer,`remark` text,`enable` numeric,`expiry_time` integer,`listen` text,`port` integer UNIQUE,`protocol` text,`settings` text,`stream_settings` text,`tag` text UNIQUE,`sniffing` text, up_1674835094547, down_1674835094547,PRIMARY KEY (`id`))";
         qry_2 = "INSERT INTO inbounds_tmp SELECT * FROM inbounds";
         qry_3 = "DROP TABLE inbounds";
         qry_4 = "ALTER TABLE `inbounds_tmp` RENAME TO `inbounds`";
@@ -448,8 +442,16 @@ function syncQry(db, qry) {
 function resetTraffic(DBs) {
     return __awaiter(this, void 0, void 0, function* () {
         let qry = "UPDATE inbounds SET up=0, down=0";
-        for (let db of DBs)
+        let append = (new Date()).getTime();
+        let addColumnUpQry = `ALTER TABLE inbounds ADD COLUMN up_${append}`;
+        let addColumnDownQry = `ALTER TABLE inbounds ADD COLUMN down_${append}`;
+        let copyQry = `UPDATE inbounds SET up_${append}=up, down_${append}=down`;
+        for (let db of DBs) {
+            yield syncQry(db, addColumnUpQry);
+            yield syncQry(db, addColumnDownQry);
+            yield syncQry(db, copyQry);
             yield syncQry(db, qry);
+        }
         console.log(`All Traffics has been RESET!`);
     });
 }
