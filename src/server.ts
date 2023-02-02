@@ -33,7 +33,6 @@ init();
 
 // -- =====================================================================================
 
-// ! MAIN ACTIONS DEFINES HERE
 async function init () {
 
     await ARGvController();
@@ -41,27 +40,6 @@ async function init () {
     DBs = await DBs_Loader( dbs_name );
 
     await ARGvCommandsController();
-
-    
-    //+ 3*60*60*1000 + 30*60*1000;
-
-    // console.log(later);
-    // console.log(today);
-    
-    // console.log( test );
-    // console.log( thatDay );
-    // console.log( thatDay.getFullYear(), thatDay.getMonth(), thatDay.getDate() );
-    // console.log( new Date( thatDay.getUTCFullYear(), thatDay.getUTCMonth(), thatDay.getUTCDate()+1) );
-    // console.log( new Date( thatDay.getFullYear(), thatDay.getMonth(), thatDay.getDate()+1 ) );
-    
-    
-    // await userTimer( DBs, "Mojtaba", new Date( 2023,1,30,0,0 ) )
-    // await resetTraffic( DBs );
-    // await userRemove( DBs, "T~T" );
-    // await new Promise( _ => setTimeout( _ , 500 ) );
-
-    // await userTimer( DBs, "HashemiRad", new Date( 2023,1,29,0,0 ) )
-
 
     if ( ( ARGv.update || ARGv.U ) && !ARGv.x ) runShellCmd( uploadCmd );
 
@@ -228,7 +206,8 @@ function info ( groups: TS.Users, oldData?: TS.Users ): TS.Table {
         }
         else days = null;
 
-        if ( days<0 ) validFor = "--------- | -----------";
+        if ( groups[ group ][0].expiry_time && groups[ group ][0].expiry_time < now )
+            validFor = "--------- | -----------";
 
         // .. nur Verschönerer
         if ( validFor.length === 31 ) validFor = " " + validFor;
