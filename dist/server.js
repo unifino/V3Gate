@@ -40,9 +40,17 @@ function init() {
         yield ARGvController();
         DBs = yield DBs_Loader(dbs_name);
         yield ARGvCommandsController();
+        //+ 3*60*60*1000 + 30*60*1000;
+        // console.log(later);
+        // console.log(today);
+        // console.log( test );
+        // console.log( thatDay );
+        // console.log( thatDay.getFullYear(), thatDay.getMonth(), thatDay.getDate() );
+        // console.log( new Date( thatDay.getUTCFullYear(), thatDay.getUTCMonth(), thatDay.getUTCDate()+1) );
+        // console.log( new Date( thatDay.getFullYear(), thatDay.getMonth(), thatDay.getDate()+1 ) );
         // await userTimer( DBs, "Mojtaba", new Date( 2023,1,30,0,0 ) )
         // await resetTraffic( DBs );
-        // await removeUser( DBs, "T~T" );
+        // await userRemove( DBs, "T~T" );
         // await new Promise( _ => setTimeout( _ , 500 ) );
         // await userTimer( DBs, "HashemiRad", new Date( 2023,1,29,0,0 ) )
         if ((ARGv_1.ARGv.update || ARGv_1.ARGv.U) && !ARGv_1.ARGv.x)
@@ -109,22 +117,64 @@ function ARGvCommandsController() {
                 yield refreshTable(DBs);
                 yield newTempUser();
                 yield userRename(DBs, "TMP", argv.name);
+                if (argv.days)
+                    userTimer(DBs, argv.name, argv.days);
             })
         })
             .command({
             command: 'timer',
             describe: "Set a Time for User",
             handler: (argv) => __awaiter(this, void 0, void 0, function* () {
-                if (!argv.name) {
-                    console.log("Please give me the name of User';;''';'''';;''/!! \n");
+                if (!argv.name || !argv.days) {
+                    if (!argv.name)
+                        console.log("Please give me the name of User!!");
+                    if (!argv.days)
+                        console.log("Bitte geben Sie mir die Zeit!!");
+                    console.log();
                     return;
                 }
-                yield refreshTable(DBs);
-                yield newTempUser();
-                yield userRename(DBs, "TMP", argv.name);
+                yield userTimer(DBs, argv.name, argv.days);
+            })
+        })
+            .command({
+            command: 'rename',
+            describe: 'Eine Nutzer Umnennen!',
+            handler: (argv) => __awaiter(this, void 0, void 0, function* () {
+                if (!argv.old || !argv.new) {
+                    if (!argv.old)
+                        console.log("Please give me the name of User!!");
+                    if (!argv.new)
+                        console.log("Bitte geben Sie mir eine Name!!");
+                    console.log();
+                    return;
+                }
+                yield userRename(DBs, argv.old, argv.new);
+            })
+        })
+            .command({
+            command: 'remove',
+            describe: 'Eine Nutzer Löschen',
+            handler: (argv) => __awaiter(this, void 0, void 0, function* () {
+                yield userRemove(DBs, argv.name);
             })
         })
             .parse();
+    });
+}
+// -- =====================================================================================
+function userCheck(db, user) {
+    return __awaiter(this, void 0, void 0, function* () {
+        return new Promise((rs, rx) => {
+            let qry;
+            qry = "SELECT * from inbounds WHERE remark LIKE '" + user + " PPS%'";
+            db.all(qry, (e, rows) => {
+                // .. report any error
+                if (e)
+                    rx([e, qry]);
+                else
+                    rows.length ? rs("Gefunden!") : rx(`Keine ${user} !!!`);
+            });
+        });
     });
 }
 // -- =====================================================================================
@@ -181,20 +231,25 @@ function grouper(DBs) {
 // -- =====================================================================================
 function userRename(DBs, oldName, newName) {
     return __awaiter(this, void 0, void 0, function* () {
-        let result_tmp = {};
         // .. loop over dbs
-        for (let db of DBs)
+        for (let db of DBs) {
+            yield userCheck(db, oldName);
             yield rename(db, oldName, newName);
-        console.log(oldName, " -> ", newName);
+        }
+        if (oldName !== "TMP")
+            console.log(oldName, " -> ", newName);
     });
 }
 // -- =====================================================================================
-function userTimer(DBs, user, date) {
+function userTimer(DBs, user, days) {
     return __awaiter(this, void 0, void 0, function* () {
+        let now = new Date().getTime();
+        let later = new Date(now + (days * 24 * 60 * 60 * 1000));
+        let lastTime = new Date(later.getUTCFullYear(), later.getUTCMonth(), later.getUTCDate() + 1);
         // .. loop over dbs
         for (let db of DBs)
-            yield timer(db, user, date);
-        console.log(`Die Benutzer: ${user} ist bis ${date} verfügbar`);
+            yield timer(db, user, lastTime);
+        console.log(`Die Benutzer: ${user} ist bis ${lastTime} verfügbar`);
     });
 }
 // -- =====================================================================================
@@ -254,6 +309,8 @@ function rename(db, oldName, newName) {
 // -- =====================================================================================
 function timer(db, user, date) {
     return __awaiter(this, void 0, void 0, function* () {
+        // .. first check the user existence
+        yield userCheck(db, user);
         return new Promise((rs, rx) => {
             let qry;
             qry = "UPDATE inbounds SET expiry_time=" +
@@ -434,11 +491,13 @@ function refreshTable(DBs) {
     });
 }
 // -- =====================================================================================
-function removeUser(DBs, user) {
+function userRemove(DBs, user) {
     return __awaiter(this, void 0, void 0, function* () {
         let qry = "DELETE FROM inbounds WHERE remark LIKE '" + user + " PPS%'";
-        for (let db of DBs)
+        for (let db of DBs) {
+            yield userCheck(db, user);
             yield syncQry(db, qry);
+        }
         console.log(`Nutzer: ${user} :: wurde gelöscht!`);
     });
 }

@@ -41,9 +41,23 @@ async function init () {
     DBs = await DBs_Loader( dbs_name );
 
     await ARGvCommandsController();
+
+    
+    //+ 3*60*60*1000 + 30*60*1000;
+
+    // console.log(later);
+    // console.log(today);
+    
+    // console.log( test );
+    // console.log( thatDay );
+    // console.log( thatDay.getFullYear(), thatDay.getMonth(), thatDay.getDate() );
+    // console.log( new Date( thatDay.getUTCFullYear(), thatDay.getUTCMonth(), thatDay.getUTCDate()+1) );
+    // console.log( new Date( thatDay.getFullYear(), thatDay.getMonth(), thatDay.getDate()+1 ) );
+    
+    
     // await userTimer( DBs, "Mojtaba", new Date( 2023,1,30,0,0 ) )
     // await resetTraffic( DBs );
-    // await removeUser( DBs, "T~T" );
+    // await userRemove( DBs, "T~T" );
     // await new Promise( _ => setTimeout( _ , 500 ) );
 
     // await userTimer( DBs, "HashemiRad", new Date( 2023,1,29,0,0 ) )
@@ -110,7 +124,7 @@ async function ARGvCommandsController () {
     } )
 
     .command( {
-        command : 'add',
+        command: 'add',
         describe: "Adding a New User",
         handler: async argv => {
             if ( !argv.name ) {
@@ -120,25 +134,68 @@ async function ARGvCommandsController () {
             await refreshTable( DBs );
             await newTempUser();
             await userRename( DBs, "TMP", argv.name );
+            if ( argv.days ) userTimer( DBs, argv.name, argv.days );
         }
     } )
 
     .command( {
-        command : 'timer',
+        command: 'timer',
         describe: "Set a Time for User",
         handler: async argv => {
-            if ( !argv.name ) {
-                console.log( "Please give me the name of User';;''';'''';;''/!! \n" );
+            if ( !argv.name || !argv.days ) {
+                if ( !argv.name ) console.log( "Please give me the name of User!!" );
+                if ( !argv.days ) console.log( "Bitte geben Sie mir die Zeit!!" );
+                console.log();
                 return;
             }
-            await refreshTable( DBs );
-            await newTempUser();
-            await userRename( DBs, "TMP", argv.name );
+            await userTimer( DBs, argv.name, argv.days );
+        }
+    } )
+
+    .command( {
+        command: 'rename',
+        describe: 'Eine Nutzer Umnennen!',
+        handler: async argv => {
+            if ( !argv.old || !argv.new ) {
+                if ( !argv.old ) console.log( "Please give me the name of User!!" );
+                if ( !argv.new ) console.log( "Bitte geben Sie mir eine Name!!" );
+                console.log();
+                return;
+            }
+            await userRename( DBs, argv.old, argv.new );
+        }
+    } )
+
+    .command( {
+        command: 'remove',
+        describe: 'Eine Nutzer Löschen',
+        handler: async argv => {
+            await userRemove( DBs, argv.name )
         }
     } )
 
     .parse();
 
+
+}
+
+// -- =====================================================================================
+
+async function userCheck ( db: SQL_lite_3.Database, user: string ) {
+
+    return new Promise ( (rs, rx) => { 
+
+        let qry: string;
+
+        qry = "SELECT * from inbounds WHERE remark LIKE '" + user + " PPS%'";
+
+        db.all( qry, ( e, rows ) => {
+            // .. report any error
+            if (e) rx([e,qry]);
+            else rows.length ? rs( "Gefunden!") : rx( `Keine ${user} !!!` );
+        } )
+
+    } )
 
 }
 
@@ -208,23 +265,33 @@ async function grouper ( DBs: SQL_lite_3.Database[] ) {
 
 async function userRename ( DBs: SQL_lite_3.Database[], oldName: string, newName: string ) {
 
-    let result_tmp: TS.Users = {};
-
     // .. loop over dbs
-    for ( let db of DBs ) await rename( db, oldName, newName );
+    for ( let db of DBs ) {
+        await userCheck( db, oldName );
+        await rename( db, oldName, newName );
+    }
 
-    console.log( oldName, " -> ", newName );
+    if ( oldName !== "TMP" ) console.log( oldName, " -> ", newName );
 
 }
 
 // -- =====================================================================================
 
-async function userTimer ( DBs: SQL_lite_3.Database[], user: string, date: Date ) {
+async function userTimer ( DBs: SQL_lite_3.Database[], user: string, days: number ) {
+
+    let now = new Date().getTime();
+    let later = new Date( now + ( days *24*60*60*1000 ) );
+
+    let lastTime = new Date(
+        later.getUTCFullYear(),
+        later.getUTCMonth(),
+        later.getUTCDate()+1,
+    )
 
     // .. loop over dbs
-    for ( let db of DBs ) await timer( db, user, date );
+    for ( let db of DBs ) await timer( db, user, lastTime );
 
-    console.log( `Die Benutzer: ${user} ist bis ${date} verfügbar` );
+    console.log( `Die Benutzer: ${user} ist bis ${lastTime} verfügbar` );
 
 }
 
@@ -311,6 +378,9 @@ async function rename ( db: SQL_lite_3.Database, oldName: string, newName: strin
 // -- =====================================================================================
 
 async function timer ( db: SQL_lite_3.Database, user: string, date: Date ) {
+
+    // .. first check the user existence
+    await userCheck( db, user );
 
     return new Promise ( (rs, rx) => {
 
@@ -542,11 +612,14 @@ async function refreshTable ( DBs: SQL_lite_3.Database[] ) {
 
 // -- =====================================================================================
 
-async function removeUser ( DBs: SQL_lite_3.Database[], user: string ) {
+async function userRemove ( DBs: SQL_lite_3.Database[], user: string ) {
 
     let qry = "DELETE FROM inbounds WHERE remark LIKE '" + user + " PPS%'";
 
-    for ( let db of DBs ) await syncQry( db, qry );
+    for ( let db of DBs ) {
+        await userCheck( db, user );
+        await syncQry( db, qry );
+    }
 
     console.log( `Nutzer: ${user} :: wurde gelöscht!` );
 
@@ -620,7 +693,6 @@ async function runShellCmd ( cmd: string ) {
         } );
     } );
 }
-
 
 // -- =====================================================================================
 
