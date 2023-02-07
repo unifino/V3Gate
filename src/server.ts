@@ -152,6 +152,22 @@ async function ARGvCommandsController () {
         }
     } )
 
+    .command( {
+        command: 'connections',
+        describe: 'Alle Verbindungen des Benutzers Melden',
+        handler: async argv => {
+            await userConnections( DBs, argv.name )
+        }
+    } )
+
+    .command( {
+        command: 'deactive',
+        describe: 'Eine Nutzer Deactiveren',
+        handler: async argv => {
+            await userDeactivate( DBs, argv.name )
+        }
+    } )
+
     .parse();
 
 
@@ -365,7 +381,7 @@ async function timer ( db: SQL_lite_3.Database, user: string, date: Date ) {
 
         let qry: string;
 
-        qry = "UPDATE inbounds SET expiry_time=" +
+        qry = "UPDATE inbounds SET enable=1, expiry_time=" +
             date.getTime() +
             " WHERE remark LIKE '" + user + " PPS%'";
 
@@ -606,6 +622,164 @@ async function userRemove ( DBs: SQL_lite_3.Database[], user: string ) {
 
 // -- =====================================================================================
 
+async function userConnections ( DBs: SQL_lite_3.Database[], user: string ) {
+
+    let qry = "SELECT * FROM inbounds WHERE remark LIKE '" + user + " PPS%'";
+    let entries: TS.CNX[] = [];
+    let connection: string;
+    let connections: string[] = [];
+
+    for ( let db of DBs ) {
+        await userCheck( db, user );
+        entries.push( ...await syncQry( db, qry ) );
+    }
+
+    for ( let entry of entries ) {
+        connection = connectionStringify( entry );
+        // .. Nur neu Verbindungen
+        if ( !connections.includes( connection ) ) connections.push( connection );
+    }
+
+    console.log( connections.join( "\n" ) );
+
+}
+
+// -- =====================================================================================
+
+function connectionStringify ( cnx: TS.CNX ) {
+
+    // .. Zeichenfolge in JSON Analysieren
+    cnx.settings = JSON.parse( cnx.settings as any );
+    cnx.stream_settings = JSON.parse( cnx.stream_settings as any );
+
+    let myCNX: string = null;
+
+    if ( cnx.protocol === "vmess" ) myCNX = vmessStringify( cnx );
+    if ( cnx.protocol === "vless" ) myCNX = vlessStringify( cnx );
+
+    return myCNX;
+
+}
+
+// -- =====================================================================================
+
+function vlessStringify ( cnx: TS.CNX ) {
+
+    let template = {
+        type: cnx.stream_settings.network,
+        tls: cnx.stream_settings.security
+    }
+
+    let myCNX = "vless://";
+
+    let sn = "pps.fitored.xyz";
+    try { sn = cnx.stream_settings.tlsSettings.serverName } catch {}
+    try { sn = cnx.stream_settings.xtlsSettings.serverName } catch {}
+
+    myCNX += cnx.settings.clients[0].id + "@" + sn + ":" + cnx.port + "?";
+    myCNX += "type=" + cnx.stream_settings.network + "&";
+    myCNX += "security=" + cnx.stream_settings.security + "&";
+
+    switch ( cnx.stream_settings.network ) {
+
+        case "tcp"  :
+            if ( cnx.stream_settings.security === "tls" ) 
+                myCNX += "sni=" + cnx.stream_settings.tlsSettings.serverName;
+            else 
+                myCNX += "flow=" + cnx.settings.clients[0].flow;
+            break;
+
+        case "kcp"  :
+            myCNX += "headerType=" + cnx.stream_settings.kcpSettings.header.type;
+            myCNX += "&seed=" + cnx.stream_settings.kcpSettings.seed;
+            break;
+
+        case "ws"   :
+            myCNX += "path=" + cnx.stream_settings.wsSettings.path;
+            myCNX += "&sni=" + cnx.stream_settings.tlsSettings.serverName;
+            break;
+
+        case "quic" :
+            myCNX += "quicSecurity=" + cnx.stream_settings.quicSettings.security;
+            myCNX += "&key=" + cnx.stream_settings.quicSettings.key;
+            myCNX += "&headerType=" + cnx.stream_settings.quicSettings.header.type;
+            myCNX += "&sni=" + cnx.stream_settings.tlsSettings.serverName;
+            break;
+
+        default:
+            // .. wenn es nicht bekkant ist, wird NULL zurückgegeben
+            return null;
+
+    }
+
+    return myCNX + "#" + encodeURIComponent( cnx.remark );
+
+}
+
+// -- =====================================================================================
+
+function vmessStringify ( cnx: TS.CNX ) {
+
+    let type: string = null;
+    let path: string = null;
+    let prefix = "vmess://";
+
+    switch ( cnx.stream_settings.network ) {
+
+        case "tcp"  :
+            path = "";
+            type = cnx.stream_settings.tcpSettings.header.type;
+            break;
+
+        case "kcp"  :
+            path = cnx.stream_settings.kcpSettings.seed;
+            type = cnx.stream_settings.kcpSettings.header.type;
+            break;
+
+        case "ws"   :
+            path = cnx.stream_settings.wsSettings.path;
+            type = cnx.stream_settings.idk || "none";
+            break;
+
+        case "quic" :
+            path = "";
+            type = cnx.stream_settings.quicSettings.header.type;
+            break;
+
+    }
+
+    // .. wenn es nicht bekkant ist, wird NULL zurückgegeben
+    if ( type === null ) return null;
+ 
+    let template = {
+        v: "2",
+        ps: cnx.remark,
+        add: "pps.fitored.xyz",
+        port: cnx.port,
+        id: cnx.settings.clients[0].id,
+        aid: 0,
+        net: cnx.stream_settings.network,
+        type: type,
+        host: cnx.stream_settings.idk || "",
+        path: encodeURI( path ),
+        tls: cnx.stream_settings.security
+    }
+
+    return prefix + Buffer.from( JSON.stringify( template ), "utf8" ).toString( 'base64' );
+
+}
+
+// -- =====================================================================================
+
+function uuid() {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace( /[xy]/g, c => {
+        let r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
+        return v.toString(16);
+    } );
+}
+
+// -- =====================================================================================
+
 async function newPorts ( db: SQL_lite_3.Database, qty: number ): Promise<number[]> {
 
     let qry = "SELECT port FROM inbounds";
@@ -659,6 +833,21 @@ async function resetTraffic ( DBs: SQL_lite_3.Database[] ) {
     }
 
     console.log( `All Traffics has been RESET!` );
+
+}
+
+// -- =====================================================================================
+
+async function userDeactivate ( DBs: SQL_lite_3.Database[], user: string ) {
+
+    let qry = "UPDATE inbounds SET enable=0 WHERE remark LIKE '" + user + " PPS%'";
+
+    for ( let db of DBs ) {
+        await userCheck( db, user );
+        await syncQry( db, qry );
+    }
+
+    console.log( `Nutzer: ${user} :: wurde deactivert!` );
 
 }
 

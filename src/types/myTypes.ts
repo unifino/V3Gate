@@ -20,42 +20,48 @@ export type ARGv = {
 }
 
 export type CNX = {
-    id: number,
-    user_id: number,
-    up: number,
-    down: number,
-    total: number,
-    remark: string,
+    id: number
+    user_id: number
+    up: number
+    down: number
+    total: number
+    remark: string
     enable: 0|1,
-    expiry_time: number,
-    listen: string,
-    port: number,
-    protocol: 'vless'|'vmess',
-    settings: { 
+    expiry_time: number
+    listen: string
+    port: number
+    protocol: 'vless'|'vmess'
+    settings: {
         clients: [ {
             id: string,
-            flow: "xtls-rprx-direct" 
-          }],
-        decryption: "none",
-        fallbacks: [] 
+            flow: "xtls-rprx-direct"
+          } ],
+        decryption: "none"
+        fallbacks: []
     },
     stream_settings: {
-        network: "kcp",
-        security: "none",
-        kcpSettings: {
-          mtu: number,
-          tti: number,
-          uplinkCapacity: number,
-          downlinkCapacity: number,
-          congestion: boolean,
-          readBufferSize: number,
-          writeBufferSize: number,
+        idk?: "Ich weiss nicht"
+        network: "kcp"|"quic"|"ws"|"tcp"
+        security: "none"|"xtls"|"tls"
+        tlsSettings?: { serverName: string, certificates: object[] },
+        xtlsSettings?: { serverName: string, certificates: object[] },
+        tcpSettings: { header: { type: 'none' } }
+        quicSettings: { security: 'none', key: '', header: { type: 'dtls' } }
+        wsSettings?: { path: string, headers: object }
+        kcpSettings?: {
+          mtu: number
+          tti: number
+          uplinkCapacity: number
+          downlinkCapacity: number
+          congestion: boolean
+          readBufferSize: number
+          writeBufferSize: number
           header: {
             type: "none"
           },
           seed: string
         }
-      },
+    },
     tag: string,
     sniffing: {
         enabled: boolean,

@@ -34,25 +34,11 @@ let uploadCmd = "./Files/Update.sh";
 // -- =====================================================================================
 init();
 // -- =====================================================================================
-// ! MAIN ACTIONS DEFINES HERE
 function init() {
     return __awaiter(this, void 0, void 0, function* () {
         yield ARGvController();
         DBs = yield DBs_Loader(dbs_name);
         yield ARGvCommandsController();
-        //+ 3*60*60*1000 + 30*60*1000;
-        // console.log(later);
-        // console.log(today);
-        // console.log( test );
-        // console.log( thatDay );
-        // console.log( thatDay.getFullYear(), thatDay.getMonth(), thatDay.getDate() );
-        // console.log( new Date( thatDay.getUTCFullYear(), thatDay.getUTCMonth(), thatDay.getUTCDate()+1) );
-        // console.log( new Date( thatDay.getFullYear(), thatDay.getMonth(), thatDay.getDate()+1 ) );
-        // await userTimer( DBs, "Mojtaba", new Date( 2023,1,30,0,0 ) )
-        // await resetTraffic( DBs );
-        // await userRemove( DBs, "T~T" );
-        // await new Promise( _ => setTimeout( _ , 500 ) );
-        // await userTimer( DBs, "HashemiRad", new Date( 2023,1,29,0,0 ) )
         if ((ARGv_1.ARGv.update || ARGv_1.ARGv.U) && !ARGv_1.ARGv.x)
             runShellCmd(uploadCmd);
     });
@@ -158,6 +144,20 @@ function ARGvCommandsController() {
                 yield userRemove(DBs, argv.name);
             })
         })
+            .command({
+            command: 'connections',
+            describe: 'Alle Verbindungen des Benutzers Melden',
+            handler: (argv) => __awaiter(this, void 0, void 0, function* () {
+                yield userConnections(DBs, argv.name);
+            })
+        })
+            .command({
+            command: 'deactive',
+            describe: 'Eine Nutzer Deactiveren',
+            handler: (argv) => __awaiter(this, void 0, void 0, function* () {
+                yield userDeactivate(DBs, argv.name);
+            })
+        })
             .parse();
     });
 }
@@ -202,7 +202,7 @@ function info(groups, oldData) {
         }
         else
             days = null;
-        if (days < 0)
+        if (groups[group][0].expiry_time && groups[group][0].expiry_time < now)
             validFor = "--------- | -----------";
         // .. nur Verschönerer
         if (validFor.length === 31)
@@ -313,7 +313,7 @@ function timer(db, user, date) {
         yield userCheck(db, user);
         return new Promise((rs, rx) => {
             let qry;
-            qry = "UPDATE inbounds SET expiry_time=" +
+            qry = "UPDATE inbounds SET enable=1, expiry_time=" +
                 date.getTime() +
                 " WHERE remark LIKE '" + user + " PPS%'";
             // .. Read Query
@@ -502,6 +502,42 @@ function userRemove(DBs, user) {
     });
 }
 // -- =====================================================================================
+function userConnections(DBs, user) {
+    return __awaiter(this, void 0, void 0, function* () {
+        let qry = "SELECT * FROM inbounds WHERE remark LIKE '" + user + " PPS%'";
+        let entries = [];
+        let connection;
+        let connections = [];
+        for (let db of DBs) {
+            yield userCheck(db, user);
+            entries.push(...yield syncQry(db, qry));
+        }
+        for (let entry of entries) {
+            connection = connectionStringify(entry);
+            // .. Nur neu Verbindungen
+            if (!connections.includes(connection))
+                connections.push(connection);
+        }
+        console.log(connections);
+    });
+}
+// -- =====================================================================================
+function connectionStringify(cnx) {
+    // .. Zeichenfolge in JSON Analysieren
+    cnx.settings = JSON.parse(cnx.settings);
+    let myCNX = {
+        id: cnx.settings.clients[0].id
+    };
+    return JSON.stringify(myCNX);
+}
+// -- =====================================================================================
+function uuid() {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+        let r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+    });
+}
+// -- =====================================================================================
 function newPorts(db, qty) {
     return __awaiter(this, void 0, void 0, function* () {
         let qry = "SELECT port FROM inbounds";
@@ -549,6 +585,17 @@ function resetTraffic(DBs) {
             yield syncQry(db, qry);
         }
         console.log(`All Traffics has been RESET!`);
+    });
+}
+// -- =====================================================================================
+function userDeactivate(DBs, user) {
+    return __awaiter(this, void 0, void 0, function* () {
+        let qry = "UPDATE inbounds SET enable=0 WHERE remark LIKE '" + user + " PPS%'";
+        for (let db of DBs) {
+            yield userCheck(db, user);
+            yield syncQry(db, qry);
+        }
+        console.log(`Nutzer: ${user} :: wurde deactivert!`);
     });
 }
 // -- =====================================================================================
