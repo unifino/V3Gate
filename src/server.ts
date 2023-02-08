@@ -132,7 +132,7 @@ async function ARGvCommandsController () {
 
     .command( {
         command: 'rename',
-        describe: 'Eine Nutzer Umnennen!',
+        describe: 'Eine Nutzer Umbenennen!',
         handler: async argv => {
             if ( !argv.old || !argv.new ) {
                 if ( !argv.old ) console.log( "Please give me the name of User!!" );
@@ -162,7 +162,7 @@ async function ARGvCommandsController () {
 
     .command( {
         command: 'deactive',
-        describe: 'Eine Nutzer Deactiveren',
+        describe: 'Eine Nutzer Deaktivieren',
         handler: async argv => {
             await userDeactivate( DBs, argv.name )
         }
@@ -225,7 +225,7 @@ function info ( groups: TS.Users, oldData?: TS.Users ): TS.Table {
         if ( groups[ group ][0].expiry_time && groups[ group ][0].expiry_time < now )
             validFor = "--------- | -----------";
 
-        // .. nur Verschönerer
+        // .. nur Verschönere
         if ( validFor.length === 31 ) validFor = " " + validFor;
 
         table.push( {
@@ -707,7 +707,7 @@ function vlessStringify ( cnx: TS.CNX ) {
             break;
 
         default:
-            // .. wenn es nicht bekkant ist, wird NULL zurückgegeben
+            // .. wenn es nicht bekannt ist, wird NULL zurückgegeben
             return null;
 
     }
@@ -748,7 +748,7 @@ function vmessStringify ( cnx: TS.CNX ) {
 
     }
 
-    // .. wenn es nicht bekkant ist, wird NULL zurückgegeben
+    // .. wenn es nicht bekannt ist, wird NULL zurückgegeben
     if ( type === null ) return null;
  
     let template = {
@@ -847,7 +847,7 @@ async function userDeactivate ( DBs: SQL_lite_3.Database[], user: string ) {
         await syncQry( db, qry );
     }
 
-    console.log( `Nutzer: ${user} :: wurde deactivert!` );
+    console.log( `Nutzer: ${user} :: wurde deaktiviert!` );
 
 }
 
