@@ -1,4 +1,3 @@
-let fs = require('fs');
 const shell = require('shelljs');
 const { Console } = require('console');
 const { Transform } = require('stream');
@@ -21,7 +20,6 @@ let iDBbs = dbs_name.reduce( (x,i) => {
     x.push( Number( i.replace( 'x-ui_', '' ).replace( '.db', '' ) ) );
     return x;
 }, [] );
-
 
 let DBs: SQL_lite_3.Database[] = [];
 let downloadCmd = "./Files/Download.sh";
@@ -863,8 +861,3 @@ async function runShellCmd ( cmd: string ) {
 }
 
 // -- =====================================================================================
-
-// fs.writeFile( 'xxx.json', JSON.stringify( "DATA" ), function (err) {
-//     if (err) return console.log(err);
-//     console.log('+ Simple : Quran > Quran.json');
-// });
