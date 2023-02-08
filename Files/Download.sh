@@ -7,6 +7,10 @@ v2="65.109.143.244"
 v3="5.75.178.218"
 # v4="5.75.198.227"
 
+# sshpass -p "'" ssh -o "StrictHostKeyChecking no" $v1 &
+# sshpass -p "'" ssh -o "StrictHostKeyChecking no" $v2 &
+# sshpass -p "'" ssh -o "StrictHostKeyChecking no" $v3 &
+
 vi="5.160.179.91"
 
 # .. redirectcd 
@@ -30,11 +34,11 @@ fi
 rm -rf *.db
 
 # .. download DB files
-    sshpass -p "'" scp unifino@$v1:/etc/x-ui/x-ui.db ../db/x-ui_1.db &&
+    sshpass -p "'" scp -o StrictHostKeyChecking=no unifino@$v1:/etc/x-ui/x-ui.db ../db/x-ui_1.db &&
     echo "VPS1 ... Done!" &
-    sshpass -p "'" scp unifino@$v2:/etc/x-ui/x-ui.db ../db/x-ui_2.db &&
+    sshpass -p "'" scp -o StrictHostKeyChecking=no unifino@$v2:/etc/x-ui/x-ui.db ../db/x-ui_2.db &&
     echo "VPS2 ... Done!" &
-    sshpass -p "'" scp unifino@$v3:/etc/x-ui/x-ui.db ../db/x-ui_3.db &&
+    sshpass -p "'" scp -o StrictHostKeyChecking=no unifino@$v3:/etc/x-ui/x-ui.db ../db/x-ui_3.db &&
     echo "VPS3 ... Done!"
     # & sshpass -p "'" scp unifino@$v4:/etc/x-ui/x-ui.db ~/Documents/VPS/db/x-ui_4.db &&
     # echo "VPS4 ... Done!"
