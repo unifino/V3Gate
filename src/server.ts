@@ -163,24 +163,23 @@ async function ARGvCommandsController () {
         describe: 'Nutzungsanalyse',
         handler: async argv => {
             await analysis( DBs, argv.name );
-            await new Promise( _ => setTimeout( _, 500 ) );
-            console.log( 
-                [ ...new Set( miniOutPut ) ]
-                .filter( 
-                    x => x!=="Fast" &&
-                    x!=="Fast 2" &&
-                    x!=="🛡 1" &&
-                    x!=="🛡 2" &&
-                    x!=="🛡 3" &&
-                    x!=="🛡 4"
-                )
-                .sort( (a,b) => a>b ? 1:-1 ) 
-            );
+            // await new Promise( _ => setTimeout( _, 500 ) );
+            // console.log( 
+            //     [ ...new Set( miniOutPut ) ]
+            //     .filter( 
+            //         x => x!=="Fast" &&
+            //         x!=="Fast 2" &&
+            //         x!=="🛡 1" &&
+            //         x!=="🛡 2" &&
+            //         x!=="🛡 3" &&
+            //         x!=="🛡 4"
+            //     )
+            //     .sort( (a,b) => a>b ? 1:-1 ) 
+            // );
         }
     } )
 
     .parse();
-
 
 }
 
@@ -870,7 +869,7 @@ async function userDeactivate ( DBs: SQL_lite_3.Database[], user: string ) {
 
 // -- =====================================================================================
 
-let miniOutPut = [];
+// let miniOutPut = [];
 async function analysis  ( DBs: SQL_lite_3.Database[], user?: string ) {
 
     let qry = "SELECT * FROM inbounds";
@@ -900,13 +899,14 @@ async function analysis  ( DBs: SQL_lite_3.Database[], user?: string ) {
     }, [] );
 
     output = output.sort( (a,b) => a[0]<b[0] ? 1:-1 );
-    output = output.filter( x => x[0]>10 );
+    // output = output.filter( x => x[0]>10 );
+    // console.log( output.reduce( (x,i) => x+=i[0], 0 ) );
 
-    let mot = output.reduce( (x,i) => {
-        x.push( i[1].split( 'PPS' )[1].trim() );
-        return x;
-    } , [] );
-    miniOutPut.push( ...mot );
+    // let mot = output.reduce( (x,i) => {
+    //     x.push( i[1].split( 'PPS' )[1].trim() );
+    //     return x;
+    // } , [] );
+    // miniOutPut.push( ...mot );
 
     if ( output.length ) console.log( output );
 

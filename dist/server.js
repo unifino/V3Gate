@@ -9,7 +9,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-let fs = require('fs');
 const shell = require('shelljs');
 const { Console } = require('console');
 const { Transform } = require('stream');
@@ -83,8 +82,7 @@ function ARGvCommandsController() {
     return __awaiter(this, void 0, void 0, function* () {
         const ARGvs = require('yargs');
         ARGvs
-            .command({
-            command: 'report',
+            .command({ command: 'report',
             handler: (argv) => __awaiter(this, void 0, void 0, function* () {
                 let dbs_bak_name = dbs_name.reduce((x, i) => [...x, "BackUP/" + i + ".bak"], []);
                 let DBs_bak = yield DBs_Loader(dbs_bak_name);
@@ -92,8 +90,7 @@ function ARGvCommandsController() {
                 console.log(report);
             })
         })
-            .command({
-            command: 'add',
+            .command({ command: 'add',
             describe: "Adding a New User",
             handler: (argv) => __awaiter(this, void 0, void 0, function* () {
                 if (!argv.name) {
@@ -107,8 +104,7 @@ function ARGvCommandsController() {
                     userTimer(DBs, argv.name, argv.days);
             })
         })
-            .command({
-            command: 'timer',
+            .command({ command: 'timer',
             describe: "Set a Time for User",
             handler: (argv) => __awaiter(this, void 0, void 0, function* () {
                 if (!argv.name || !argv.days) {
@@ -122,9 +118,8 @@ function ARGvCommandsController() {
                 yield userTimer(DBs, argv.name, argv.days);
             })
         })
-            .command({
-            command: 'rename',
-            describe: 'Eine Nutzer Umnennen!',
+            .command({ command: 'rename',
+            describe: 'Eine Nutzer Umbenennen!',
             handler: (argv) => __awaiter(this, void 0, void 0, function* () {
                 if (!argv.old || !argv.new) {
                     if (!argv.old)
@@ -137,25 +132,41 @@ function ARGvCommandsController() {
                 yield userRename(DBs, argv.old, argv.new);
             })
         })
-            .command({
-            command: 'remove',
+            .command({ command: 'remove',
             describe: 'Eine Nutzer Löschen',
             handler: (argv) => __awaiter(this, void 0, void 0, function* () {
                 yield userRemove(DBs, argv.name);
             })
         })
-            .command({
-            command: 'connections',
+            .command({ command: 'connections',
             describe: 'Alle Verbindungen des Benutzers Melden',
             handler: (argv) => __awaiter(this, void 0, void 0, function* () {
                 yield userConnections(DBs, argv.name);
             })
         })
-            .command({
-            command: 'deactive',
-            describe: 'Eine Nutzer Deactiveren',
+            .command({ command: 'deactive',
+            describe: 'Eine Nutzer Deaktivieren',
             handler: (argv) => __awaiter(this, void 0, void 0, function* () {
                 yield userDeactivate(DBs, argv.name);
+            })
+        })
+            .command({ command: 'analysis',
+            describe: 'Nutzungsanalyse',
+            handler: (argv) => __awaiter(this, void 0, void 0, function* () {
+                yield analysis(DBs, argv.name);
+                // await new Promise( _ => setTimeout( _, 500 ) );
+                // console.log( 
+                //     [ ...new Set( miniOutPut ) ]
+                //     .filter( 
+                //         x => x!=="Fast" &&
+                //         x!=="Fast 2" &&
+                //         x!=="🛡 1" &&
+                //         x!=="🛡 2" &&
+                //         x!=="🛡 3" &&
+                //         x!=="🛡 4"
+                //     )
+                //     .sort( (a,b) => a>b ? 1:-1 ) 
+                // );
             })
         })
             .parse();
@@ -204,7 +215,7 @@ function info(groups, oldData) {
             days = null;
         if (groups[group][0].expiry_time && groups[group][0].expiry_time < now)
             validFor = "--------- | -----------";
-        // .. nur Verschönerer
+        // .. nur Verschönere
         if (validFor.length === 31)
             validFor = " " + validFor;
         table.push({
@@ -222,7 +233,7 @@ function info(groups, oldData) {
 function grouper(DBs) {
     return __awaiter(this, void 0, void 0, function* () {
         let result_tmp = {};
-        // .. loop over dbs
+        // .. Schleife über DBs
         for (let db of DBs)
             yield groupName(db, result_tmp);
         return result_tmp;
@@ -410,17 +421,23 @@ function newTempUser() {
     return __awaiter(this, void 0, void 0, function* () {
         let db_demo = yield new SQL_lite_3.Database("./db/BackUP/TMO.db.demo", SQL_lite_3.OPEN_READWRITE);
         let qry;
+        let CNX;
         let aPort;
-        // .. Letzte ID erhalten
+        // .. Letzte ID Erhalten
         let lastID = yield getLastID(DBs[0]);
         let newCNXs_count = yield getCount(db_demo);
+        // .. Neu Ports Erhalten
         let myPorts = yield newPorts(DBs[0], newCNXs_count);
-        // .. IDs der Demo-Datenbank aktualisieren
+        // .. IDs der Demo-Datenbank Aktualisieren
         for (let i = 1; i <= newCNXs_count; i++) {
+            CNX = yield syncQry(db_demo, `SELECT * from inbounds WHERE id=${i}`);
+            CNX[0].settings = JSON.parse(CNX[0].settings);
+            CNX[0].settings.clients[0].id = uuid();
             aPort = myPorts.pop();
             qry = `UPDATE inbounds SET
             id=${(i + lastID)},
             port="${aPort}",
+            settings='${JSON.stringify(CNX[0].settings, null, "\t")}',
             tag="inbound-${aPort}"
             WHERE id=${i}`;
             yield syncQry(db_demo, qry);
@@ -437,7 +454,7 @@ function newTempUser() {
             qry = "UPDATE inbounds SET id=" + i + " WHERE id=" + (i + lastID);
             yield syncQry(db_demo, qry);
         }
-        console.log("Neue Benutzer wurden hinzugefügt");
+        console.log(`Neue TMP Benutzer: wurden hinzugefügt`);
     });
 }
 // -- =====================================================================================
@@ -518,17 +535,107 @@ function userConnections(DBs, user) {
             if (!connections.includes(connection))
                 connections.push(connection);
         }
-        console.log(connections);
+        console.log(connections.join("\n"));
     });
 }
 // -- =====================================================================================
 function connectionStringify(cnx) {
     // .. Zeichenfolge in JSON Analysieren
     cnx.settings = JSON.parse(cnx.settings);
-    let myCNX = {
-        id: cnx.settings.clients[0].id
+    cnx.stream_settings = JSON.parse(cnx.stream_settings);
+    let myCNX = null;
+    if (cnx.protocol === "vmess")
+        myCNX = vmessStringify(cnx);
+    if (cnx.protocol === "vless")
+        myCNX = vlessStringify(cnx);
+    return myCNX;
+}
+// -- =====================================================================================
+function vlessStringify(cnx) {
+    let template = {
+        type: cnx.stream_settings.network,
+        tls: cnx.stream_settings.security
     };
-    return JSON.stringify(myCNX);
+    let myCNX = "vless://";
+    let sn = "pps.fitored.xyz";
+    try {
+        sn = cnx.stream_settings.tlsSettings.serverName;
+    }
+    catch (_a) { }
+    try {
+        sn = cnx.stream_settings.xtlsSettings.serverName;
+    }
+    catch (_b) { }
+    myCNX += cnx.settings.clients[0].id + "@" + sn + ":" + cnx.port + "?";
+    myCNX += "type=" + cnx.stream_settings.network + "&";
+    myCNX += "security=" + cnx.stream_settings.security + "&";
+    switch (cnx.stream_settings.network) {
+        case "tcp":
+            if (cnx.stream_settings.security === "tls")
+                myCNX += "sni=" + cnx.stream_settings.tlsSettings.serverName;
+            else
+                myCNX += "flow=" + cnx.settings.clients[0].flow;
+            break;
+        case "kcp":
+            myCNX += "headerType=" + cnx.stream_settings.kcpSettings.header.type;
+            myCNX += "&seed=" + cnx.stream_settings.kcpSettings.seed;
+            break;
+        case "ws":
+            myCNX += "path=" + cnx.stream_settings.wsSettings.path;
+            myCNX += "&sni=" + cnx.stream_settings.tlsSettings.serverName;
+            break;
+        case "quic":
+            myCNX += "quicSecurity=" + cnx.stream_settings.quicSettings.security;
+            myCNX += "&key=" + cnx.stream_settings.quicSettings.key;
+            myCNX += "&headerType=" + cnx.stream_settings.quicSettings.header.type;
+            myCNX += "&sni=" + cnx.stream_settings.tlsSettings.serverName;
+            break;
+        default:
+            // .. wenn es nicht bekannt ist, wird NULL zurückgegeben
+            return null;
+    }
+    return myCNX + "#" + encodeURIComponent(cnx.remark);
+}
+// -- =====================================================================================
+function vmessStringify(cnx) {
+    let type = null;
+    let path = null;
+    let prefix = "vmess://";
+    switch (cnx.stream_settings.network) {
+        case "tcp":
+            path = "";
+            type = cnx.stream_settings.tcpSettings.header.type;
+            break;
+        case "kcp":
+            path = cnx.stream_settings.kcpSettings.seed;
+            type = cnx.stream_settings.kcpSettings.header.type;
+            break;
+        case "ws":
+            path = cnx.stream_settings.wsSettings.path;
+            type = cnx.stream_settings.idk || "none";
+            break;
+        case "quic":
+            path = "";
+            type = cnx.stream_settings.quicSettings.header.type;
+            break;
+    }
+    // .. wenn es nicht bekannt ist, wird NULL zurückgegeben
+    if (type === null)
+        return null;
+    let template = {
+        v: "2",
+        ps: cnx.remark,
+        add: "pps.fitored.xyz",
+        port: cnx.port,
+        id: cnx.settings.clients[0].id,
+        aid: 0,
+        net: cnx.stream_settings.network,
+        type: type,
+        host: cnx.stream_settings.idk || "",
+        path: encodeURI(path),
+        tls: cnx.stream_settings.security
+    };
+    return prefix + Buffer.from(JSON.stringify(template), "utf8").toString('base64');
 }
 // -- =====================================================================================
 function uuid() {
@@ -595,7 +702,49 @@ function userDeactivate(DBs, user) {
             yield userCheck(db, user);
             yield syncQry(db, qry);
         }
-        console.log(`Nutzer: ${user} :: wurde deactivert!`);
+        console.log(`Nutzer: ${user} :: wurde deaktiviert!`);
+    });
+}
+// -- =====================================================================================
+// let miniOutPut = [];
+function analysis(DBs, user) {
+    return __awaiter(this, void 0, void 0, function* () {
+        let qry = "SELECT * FROM inbounds";
+        if (user)
+            qry += " WHERE remark LIKE '" + user + " PPS%'";
+        else {
+            let groups = yield grouper(DBs);
+            for (let user of Object.keys(groups))
+                analysis(DBs, user);
+            return;
+        }
+        let entries = [];
+        for (let db of DBs) {
+            if (user)
+                yield userCheck(db, user);
+            entries.push(...yield syncQry(db, qry));
+        }
+        let sum = entries.reduce((x, i) => x + i.down, 0);
+        let output = entries.reduce((x, i) => {
+            if ((i.down / sum * 100) | 0) {
+                let existiert = x.find(y => y[1] === i.remark);
+                if (existiert)
+                    existiert[0] += (i.down / sum * 100) | 0;
+                else
+                    x.push([((i.down / sum * 100) | 0), i.remark]);
+            }
+            return x;
+        }, []);
+        output = output.sort((a, b) => a[0] < b[0] ? 1 : -1);
+        // output = output.filter( x => x[0]>10 );
+        // console.log( output.reduce( (x,i) => x+=i[0], 0 ) );
+        // let mot = output.reduce( (x,i) => {
+        //     x.push( i[1].split( 'PPS' )[1].trim() );
+        //     return x;
+        // } , [] );
+        // miniOutPut.push( ...mot );
+        if (output.length)
+            console.log(output);
     });
 }
 // -- =====================================================================================
@@ -611,8 +760,4 @@ function runShellCmd(cmd) {
     });
 }
 // -- =====================================================================================
-// fs.writeFile( 'xxx.json', JSON.stringify( "DATA" ), function (err) {
-//     if (err) return console.log(err);
-//     console.log('+ Simple : Quran > Quran.json');
-// });
 //# sourceMappingURL=server.js.map
