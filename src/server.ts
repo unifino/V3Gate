@@ -89,8 +89,7 @@ async function ARGvCommandsController () {
 
     ARGvs
 
-    .command( {
-        command: 'report',
+    .command( { command: 'report',
         handler: async argv => {
             let dbs_bak_name = dbs_name.reduce( (x,i) => [ ...x, "BackUP/"+i+".bak" ] ,[] );
             let DBs_bak = await DBs_Loader( dbs_bak_name );
@@ -99,8 +98,7 @@ async function ARGvCommandsController () {
         }
     } )
 
-    .command( {
-        command: 'add',
+    .command( { command: 'add',
         describe: "Adding a New User",
         handler: async argv => {
             if ( !argv.name ) {
@@ -114,8 +112,7 @@ async function ARGvCommandsController () {
         }
     } )
 
-    .command( {
-        command: 'timer',
+    .command( { command: 'timer',
         describe: "Set a Time for User",
         handler: async argv => {
             if ( !argv.name || !argv.days ) {
@@ -128,8 +125,7 @@ async function ARGvCommandsController () {
         }
     } )
 
-    .command( {
-        command: 'rename',
+    .command( { command: 'rename',
         describe: 'Eine Nutzer Umbenennen!',
         handler: async argv => {
             if ( !argv.old || !argv.new ) {
@@ -142,24 +138,21 @@ async function ARGvCommandsController () {
         }
     } )
 
-    .command( {
-        command: 'remove',
+    .command( { command: 'remove',
         describe: 'Eine Nutzer Löschen',
         handler: async argv => {
             await userRemove( DBs, argv.name )
         }
     } )
 
-    .command( {
-        command: 'connections',
+    .command( { command: 'connections',
         describe: 'Alle Verbindungen des Benutzers Melden',
         handler: async argv => {
             await userConnections( DBs, argv.name )
         }
     } )
 
-    .command( {
-        command: 'deactive',
+    .command( { command: 'deactive',
         describe: 'Eine Nutzer Deaktivieren',
         handler: async argv => {
             await userDeactivate( DBs, argv.name )
@@ -500,20 +493,26 @@ async function newTempUser () {
 
     let db_demo = await new SQL_lite_3.Database( "./db/BackUP/TMO.db.demo", SQL_lite_3.OPEN_READWRITE );
     let qry:string;
+    let CNX: TS.CNX[];
     let aPort: number;
 
-    // .. Letzte ID erhalten
+    // .. Letzte ID Erhalten
     let lastID = await getLastID( DBs[0] );
     let newCNXs_count = await getCount( db_demo );
 
+    // .. Neu Ports Erhalten
     let myPorts = await newPorts( DBs[0], newCNXs_count );
 
-    // .. IDs der Demo-Datenbank aktualisieren
+    // .. IDs der Demo-Datenbank Aktualisieren
     for ( let i=1;i<=newCNXs_count;i++ ) {
+        CNX = await syncQry( db_demo, `SELECT * from inbounds WHERE id=${i}` );
+        CNX[0].settings = JSON.parse( CNX[0].settings as any );
+        CNX[0].settings.clients[0].id = uuid();
         aPort = myPorts.pop();
         qry = `UPDATE inbounds SET
             id=${(i+lastID)},
             port="${aPort}",
+            settings='${JSON.stringify( CNX[0].settings, null, "\t" )}',
             tag="inbound-${aPort}"
             WHERE id=${i}`;
         await syncQry( db_demo, qry );
@@ -533,7 +532,7 @@ async function newTempUser () {
         await syncQry( db_demo, qry );
     }
 
-    console.log( "Neue Benutzer wurden hinzugefügt");
+    console.log( `Neue TMP Benutzer: wurden hinzugefügt` );
 
 }
 
