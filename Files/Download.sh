@@ -7,10 +7,6 @@ v2="65.109.143.244"
 v3="5.75.178.218"
 # v4="5.75.198.227"
 
-# sshpass -p "'" ssh -o "StrictHostKeyChecking no" $v1 &
-# sshpass -p "'" ssh -o "StrictHostKeyChecking no" $v2 &
-# sshpass -p "'" ssh -o "StrictHostKeyChecking no" $v3 &
-
 vi="5.160.179.91"
 
 # .. redirectcd 
