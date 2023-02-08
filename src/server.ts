@@ -159,6 +159,26 @@ async function ARGvCommandsController () {
         }
     } )
 
+    .command( { command: 'analysis',
+        describe: 'Nutzungsanalyse',
+        handler: async argv => {
+            await analysis( DBs, argv.name );
+            await new Promise( _ => setTimeout( _, 500 ) );
+            console.log( 
+                [ ...new Set( miniOutPut ) ]
+                .filter( 
+                    x => x!=="Fast" &&
+                    x!=="Fast 2" &&
+                    x!=="🛡 1" &&
+                    x!=="🛡 2" &&
+                    x!=="🛡 3" &&
+                    x!=="🛡 4"
+                )
+                .sort( (a,b) => a>b ? 1:-1 ) 
+            );
+        }
+    } )
+
     .parse();
 
 
@@ -240,7 +260,7 @@ async function grouper ( DBs: SQL_lite_3.Database[] ) {
 
     let result_tmp: TS.Users = {};
 
-    // .. loop over dbs
+    // .. Schleife über DBs
     for ( let db of DBs ) await groupName( db, result_tmp );
 
     return result_tmp;
@@ -845,6 +865,50 @@ async function userDeactivate ( DBs: SQL_lite_3.Database[], user: string ) {
     }
 
     console.log( `Nutzer: ${user} :: wurde deaktiviert!` );
+
+}
+
+// -- =====================================================================================
+
+let miniOutPut = [];
+async function analysis  ( DBs: SQL_lite_3.Database[], user?: string ) {
+
+    let qry = "SELECT * FROM inbounds";
+    if ( user ) qry +=  " WHERE remark LIKE '" + user + " PPS%'";
+    else {
+        let groups = await grouper( DBs );
+        for ( let user of Object.keys( groups ) ) analysis( DBs, user );
+        return;
+    }
+
+    let entries: TS.CNX[] = [];
+
+    for ( let db of DBs ) {
+        if ( user ) await userCheck( db, user );
+        entries.push( ...await syncQry( db, qry ) );
+    }
+
+    let sum = entries.reduce( (x,i) => x + i.down, 0 );
+
+    let output = entries.reduce( (x,i) => {
+        if ( (i.down/sum*100) | 0 ) {
+            let existiert = x.find( y => y[1] === i.remark );
+            if ( existiert ) existiert[0] += (i.down/sum*100) | 0;
+            else x.push( [ ( (i.down/sum*100) | 0 ), i.remark ] )
+        }
+        return x;
+    }, [] );
+
+    output = output.sort( (a,b) => a[0]<b[0] ? 1:-1 );
+    output = output.filter( x => x[0]>10 );
+
+    let mot = output.reduce( (x,i) => {
+        x.push( i[1].split( 'PPS' )[1].trim() );
+        return x;
+    } , [] );
+    miniOutPut.push( ...mot );
+
+    if ( output.length ) console.log( output );
 
 }
 
