@@ -93,15 +93,26 @@ function ARGvCommandsController() {
             .command({ command: 'add',
             describe: "Adding a New User",
             handler: (argv) => __awaiter(this, void 0, void 0, function* () {
-                if (!argv.name) {
-                    console.log("Please give me a Name!! \n");
-                    return;
+                if (!argv.name && argv.all) {
+                    yield refreshTable(DBs);
+                    let groups = yield grouper(DBs);
+                    let data = info(groups);
+                    for (let x of data) {
+                        yield newTempUser();
+                        yield userRename(DBs, "TMP", x.Name.replace("OLD_", ""));
+                        if (x.Days !== null)
+                            yield userTimer(DBs, x.Name.replace("OLD_", ""), x.Days);
+                    }
                 }
-                yield refreshTable(DBs);
-                yield newTempUser();
-                yield userRename(DBs, "TMP", argv.name);
-                if (argv.days)
-                    userTimer(DBs, argv.name, argv.days);
+                else if (!argv.name)
+                    console.log("Please give me a Name!! \n");
+                else {
+                    yield refreshTable(DBs);
+                    yield newTempUser();
+                    yield userRename(DBs, "TMP", argv.name);
+                    if (argv.days)
+                        userTimer(DBs, argv.name, argv.days);
+                }
             })
         })
             .command({ command: 'timer',
@@ -121,15 +132,17 @@ function ARGvCommandsController() {
             .command({ command: 'rename',
             describe: 'Eine Nutzer Umbenennen!',
             handler: (argv) => __awaiter(this, void 0, void 0, function* () {
-                if (!argv.old || !argv.new) {
+                if (!argv.old && !argv.new && argv.all)
+                    yield userRename(DBs);
+                else if (!argv.old || !argv.new) {
                     if (!argv.old)
                         console.log("Please give me the name of User!!");
                     if (!argv.new)
                         console.log("Bitte geben Sie mir eine Name!!");
                     console.log();
-                    return;
                 }
-                yield userRename(DBs, argv.old, argv.new);
+                else
+                    yield userRename(DBs, argv.old, argv.new);
             })
         })
             .command({ command: 'remove',
@@ -242,7 +255,14 @@ function grouper(DBs) {
 // -- =====================================================================================
 function userRename(DBs, oldName, newName) {
     return __awaiter(this, void 0, void 0, function* () {
-        // .. loop over dbs
+        // .. Schleife über dbs für Alle
+        if (!oldName && !newName) {
+            let groups = yield grouper(DBs);
+            for (let username of Object.keys(groups))
+                yield userRename(DBs, username, "OLD_" + username);
+            return;
+        }
+        // .. Schleife über dbs
         for (let db of DBs) {
             yield userCheck(db, oldName);
             yield rename(db, oldName, newName);
@@ -491,7 +511,7 @@ function resetIDs(db, start, end) {
 function refreshTable(DBs) {
     return __awaiter(this, void 0, void 0, function* () {
         let qry_1, qry_2, qry_3, qry_4;
-        qry_1 = "CREATE TABLE `inbounds_tmp` (`id` integer,`user_id` integer,`up` integer,`down` integer,`total` integer,`remark` text,`enable` numeric,`expiry_time` integer,`listen` text,`port` integer UNIQUE,`protocol` text,`settings` text,`stream_settings` text,`tag` text UNIQUE,`sniffing` text, up_1674835094547, down_1674835094547,PRIMARY KEY (`id`))";
+        qry_1 = "CREATE TABLE `inbounds_tmp` (`id` integer,`user_id` integer,`up` integer,`down` integer,`total` integer,`remark` text,`enable` numeric,`expiry_time` integer,`listen` text,`port` integer UNIQUE,`protocol` text,`settings` text,`stream_settings` text,`tag` text UNIQUE,`sniffing` text ,PRIMARY KEY (`id`))";
         qry_2 = "INSERT INTO inbounds_tmp SELECT * FROM inbounds";
         qry_3 = "DROP TABLE inbounds";
         qry_4 = "ALTER TABLE `inbounds_tmp` RENAME TO `inbounds`";
@@ -625,7 +645,7 @@ function vmessStringify(cnx) {
     let template = {
         v: "2",
         ps: cnx.remark,
-        add: "pps.fitored.xyz",
+        add: "pps.fitored.site",
         port: cnx.port,
         id: cnx.settings.clients[0].id,
         aid: 0,
@@ -681,14 +701,14 @@ function syncQry(db, qry) {
 function resetTraffic(DBs) {
     return __awaiter(this, void 0, void 0, function* () {
         let qry = "UPDATE inbounds SET up=0, down=0";
-        let append = (new Date()).getTime();
-        let addColumnUpQry = `ALTER TABLE inbounds ADD COLUMN up_${append}`;
-        let addColumnDownQry = `ALTER TABLE inbounds ADD COLUMN down_${append}`;
-        let copyQry = `UPDATE inbounds SET up_${append}=up, down_${append}=down`;
+        // let append = ( new Date() ).getTime();
+        // let addColumnUpQry = `ALTER TABLE inbounds ADD COLUMN up_${append}`;
+        // let addColumnDownQry = `ALTER TABLE inbounds ADD COLUMN down_${append}`;
+        // let copyQry = `UPDATE inbounds SET up_${append}=up, down_${append}=down`;
         for (let db of DBs) {
-            yield syncQry(db, addColumnUpQry);
-            yield syncQry(db, addColumnDownQry);
-            yield syncQry(db, copyQry);
+            // await syncQry( db, addColumnUpQry );
+            // await syncQry( db, addColumnDownQry );
+            // await syncQry( db, copyQry );
             yield syncQry(db, qry);
         }
         console.log(`All Traffics has been RESET!`);
