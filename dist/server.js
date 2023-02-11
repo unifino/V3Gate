@@ -82,6 +82,27 @@ function ARGvCommandsController() {
     return __awaiter(this, void 0, void 0, function* () {
         const ARGvs = require('yargs');
         ARGvs
+            .command({ command: 'tempox',
+            handler: (argv) => __awaiter(this, void 0, void 0, function* () {
+                // let dbs_old_name = [1].reduce( (x,i) => [ ...x, "BackUP/OLD/OLD_"+i+".db" ] ,[] );
+                // let DBs_OLD = await DBs_Loader( dbs_old_name );
+                // let groups = await grouper ( DBs_OLD );
+                // for( let c of groups["OLD_Neda"] ) {
+                // console.log(c.id);
+                let db_demo = yield new SQL_lite_3.Database("./db/BackUP/OLD/OLD_1.db", SQL_lite_3.OPEN_READWRITE);
+                for (let i of iDBbs) {
+                    let qry = "ATTACH DATABASE 'file:./../db/x-ui_" + i + ".db' AS db" + i;
+                    yield syncQry(db_demo, qry);
+                    qry = `INSERT INTO db${i}.inbounds SELECT * FROM inbounds WHERE id=43`;
+                    yield syncQry(db_demo, qry);
+                    qry = `INSERT INTO db${i}.inbounds SELECT * FROM inbounds WHERE id=44`;
+                    yield syncQry(db_demo, qry);
+                    qry = `INSERT INTO db${i}.inbounds SELECT * FROM inbounds WHERE id=45`;
+                    yield syncQry(db_demo, qry);
+                }
+                // }
+            })
+        })
             .command({ command: 'report',
             handler: (argv) => __awaiter(this, void 0, void 0, function* () {
                 let dbs_bak_name = dbs_name.reduce((x, i) => [...x, "BackUP/" + i + ".bak"], []);

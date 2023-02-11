@@ -89,6 +89,28 @@ async function ARGvCommandsController () {
 
     ARGvs
 
+    .command( { command: 'tempox',
+        handler: async argv => {
+            // let dbs_old_name = [1].reduce( (x,i) => [ ...x, "BackUP/OLD/OLD_"+i+".db" ] ,[] );
+            // let DBs_OLD = await DBs_Loader( dbs_old_name );
+            // let groups = await grouper ( DBs_OLD );
+            // for( let c of groups["OLD_Neda"] ) {
+                // console.log(c.id);
+            // let db_demo = await new SQL_lite_3.Database( "./db/BackUP/OLD/OLD_1.db", SQL_lite_3.OPEN_READWRITE );
+            // for ( let i of iDBbs ) {
+            //     let qry = "ATTACH DATABASE 'file:./../db/x-ui_" + i + ".db' AS db" + i;
+            //     await syncQry( db_demo, qry );
+            //     qry = `INSERT INTO db${i}.inbounds SELECT * FROM inbounds WHERE id=43`
+            //     await syncQry( db_demo, qry );
+            //     qry = `INSERT INTO db${i}.inbounds SELECT * FROM inbounds WHERE id=44`
+            //     await syncQry( db_demo, qry );
+            //     qry = `INSERT INTO db${i}.inbounds SELECT * FROM inbounds WHERE id=45`
+            //     await syncQry( db_demo, qry );
+            // }
+            // }
+        }
+    } )
+
     .command( { command: 'report',
         handler: async argv => {
             let dbs_bak_name = dbs_name.reduce( (x,i) => [ ...x, "BackUP/"+i+".bak" ] ,[] );
