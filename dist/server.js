@@ -89,18 +89,31 @@ function ARGvCommandsController() {
                 // let groups = await grouper ( DBs_OLD );
                 // for( let c of groups["OLD_Neda"] ) {
                 // console.log(c.id);
-                let db_demo = yield new SQL_lite_3.Database("./db/BackUP/OLD/OLD_1.db", SQL_lite_3.OPEN_READWRITE);
-                for (let i of iDBbs) {
-                    let qry = "ATTACH DATABASE 'file:./../db/x-ui_" + i + ".db' AS db" + i;
-                    yield syncQry(db_demo, qry);
-                    qry = `INSERT INTO db${i}.inbounds SELECT * FROM inbounds WHERE id=43`;
-                    yield syncQry(db_demo, qry);
-                    qry = `INSERT INTO db${i}.inbounds SELECT * FROM inbounds WHERE id=44`;
-                    yield syncQry(db_demo, qry);
-                    qry = `INSERT INTO db${i}.inbounds SELECT * FROM inbounds WHERE id=45`;
-                    yield syncQry(db_demo, qry);
-                }
+                // let db_demo = await new SQL_lite_3.Database( "./db/BackUP/OLD/OLD_1.db", SQL_lite_3.OPEN_READWRITE );
+                // for ( let i of iDBbs ) {
+                //     let qry = "ATTACH DATABASE 'file:./../db/x-ui_" + i + ".db' AS db" + i;
+                //     await syncQry( db_demo, qry );
+                //     qry = `INSERT INTO db${i}.inbounds SELECT * FROM inbounds WHERE id=43`
+                //     await syncQry( db_demo, qry );
+                //     qry = `INSERT INTO db${i}.inbounds SELECT * FROM inbounds WHERE id=44`
+                //     await syncQry( db_demo, qry );
+                //     qry = `INSERT INTO db${i}.inbounds SELECT * FROM inbounds WHERE id=45`
+                //     await syncQry( db_demo, qry );
                 // }
+                // }
+            })
+        })
+            .command({ command: 'userEdit',
+            handler: (argv) => __awaiter(this, void 0, void 0, function* () {
+                console.clear();
+                argv.name = "OLD_Saba";
+                argv.cnxID = 49;
+                argv.cmd = "delete-party";
+                argv.newName = "nH PPS test";
+                let exData = {};
+                if (argv.newName)
+                    exData.newName = argv.newName;
+                cnxEditor(argv.name, argv.cnx, argv.cnxID, argv.cmd, exData);
             })
         })
             .command({ command: 'report',
@@ -223,7 +236,7 @@ function userCheck(db, user) {
     });
 }
 // -- =====================================================================================
-function info(groups, oldData) {
+function info(groups) {
     let table = [];
     let downloadAmount;
     let validFor;
@@ -258,7 +271,8 @@ function info(groups, oldData) {
             usage: downloadAmount,
             Traffic: (downloadAmount / 1024 / 1024 / 1024).toFixed(1) + " GB",
             Valid: validFor,
-            Days: days
+            Days: days,
+            active: groups[group][0].enable === 1 ? true : false
         });
     }
     return table;
@@ -422,6 +436,10 @@ function reporter(groups, oldGroups) {
         table = table.filter(x => x.usage > 10000);
     if (!ARGv_1.ARGv.all)
         table = table.filter(x => x.Days >= 0);
+    if (!ARGv_1.ARGv.all)
+        table = table.filter(x => x.active);
+    if (ARGv_1.ARGv.sa)
+        table = table.filter(x => x.Diff);
     // .. remove usage column
     for (let row of table)
         delete row.usage;
@@ -592,22 +610,17 @@ function connectionStringify(cnx) {
     return myCNX;
 }
 // -- =====================================================================================
-function vlessStringify(cnx) {
-    let template = {
-        type: cnx.stream_settings.network,
-        tls: cnx.stream_settings.security
-    };
+function vlessStringify(cnx, serverName = "ppx.fitored.xyz") {
     let myCNX = "vless://";
-    let sn = "pps.fitored.xyz";
     try {
-        sn = cnx.stream_settings.tlsSettings.serverName;
+        serverName = cnx.stream_settings.tlsSettings.serverName;
     }
     catch (_a) { }
     try {
-        sn = cnx.stream_settings.xtlsSettings.serverName;
+        serverName = cnx.stream_settings.xtlsSettings.serverName;
     }
     catch (_b) { }
-    myCNX += cnx.settings.clients[0].id + "@" + sn + ":" + cnx.port + "?";
+    myCNX += cnx.settings.clients[0].id + "@" + serverName + ":" + cnx.port + "?";
     myCNX += "type=" + cnx.stream_settings.network + "&";
     myCNX += "security=" + cnx.stream_settings.security + "&";
     switch (cnx.stream_settings.network) {
@@ -638,7 +651,7 @@ function vlessStringify(cnx) {
     return myCNX + "#" + encodeURIComponent(cnx.remark);
 }
 // -- =====================================================================================
-function vmessStringify(cnx) {
+function vmessStringify(cnx, serverName = "ppx.fitored.site") {
     let type = null;
     let path = null;
     let prefix = "vmess://";
@@ -666,7 +679,7 @@ function vmessStringify(cnx) {
     let template = {
         v: "2",
         ps: cnx.remark,
-        add: "pps.fitored.site",
+        add: serverName,
         port: cnx.port,
         id: cnx.settings.clients[0].id,
         aid: 0,
@@ -786,6 +799,62 @@ function analysis(DBs, user) {
         // miniOutPut.push( ...mot );
         if (output.length)
             console.log(output);
+    });
+}
+// -- =====================================================================================
+function cnxEditor(name, cnxN, cnxID, cmd, exData) {
+    return __awaiter(this, void 0, void 0, function* () {
+        let cnx;
+        let groups;
+        if (!name) {
+            console.log("Pick One:", Object.keys(yield grouper(DBs)));
+            return;
+        }
+        else {
+            groups = yield grouper(DBs);
+            if (!cnxN && !cnxID) {
+                console.log("Which One ?\n");
+                for (let cnx of groups[name])
+                    console.log(cnx.id, cnx.remark);
+                return;
+            }
+            else {
+                if (cnx)
+                    cnx = groups[name].find(x => x.remark === cnxN);
+                else
+                    cnx = groups[name].find(x => x.id === cnxID);
+                if (!cmd)
+                    console.log(cnx);
+            }
+        }
+        switch (cmd) {
+            case "copy":
+                console.log("Es wird codiert...");
+                break;
+            case "rename":
+                if (!exData.newName)
+                    console.log("Geben Sie mir eine neue Name bitte...");
+                else {
+                    // .. Der neuName muss " PPS " enthalten
+                    if (exData.newName.includes(" PPS ")) {
+                        let qry = `UPDATE inbounds SET remark='${exData.newName}' WHERE id=${cnx.id}`;
+                        // for ( let db of DBs ) await syncQry( db, qry );
+                    }
+                    else
+                        console.log("Der Name muss 'PPS' enthalten!");
+                }
+                break;
+            case "delete":
+                console.log("Es wird codiert...");
+                break;
+            case "delete-party":
+                for (let cnx of groups[name])
+                    console.log(cnx.id, cnx.remark);
+                break;
+            default:
+                console.log("Geben Sie mir bitte eine cmd!");
+                break;
+        }
     });
 }
 // -- =====================================================================================

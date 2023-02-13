@@ -5,6 +5,7 @@ const { Transform } = require('stream');
 import * as SQL_lite_3                  from "sqlite3"
 import * as TS                          from "./types/myTypes"
 import { ARGv }                         from "./ARGv"
+import { argv0 } from "process";
 
 // -- =====================================================================================
 
@@ -108,6 +109,19 @@ async function ARGvCommandsController () {
             //     await syncQry( db_demo, qry );
             // }
             // }
+        }
+    } )
+
+    .command( { command: 'userEdit',
+        handler: async argv => {
+            console.clear()
+            argv.name = "OLD_Saba";
+            argv.cnxID = 49;
+            argv.cmd = "delete-party";
+            argv.newName = "nH PPS test"
+            let exData: { newName?: string } = {};
+            if ( argv.newName ) exData.newName = argv.newName; 
+            cnxEditor ( argv.name, argv.cnx, argv.cnxID, argv.cmd, exData );
         }
     } )
 
@@ -236,7 +250,7 @@ async function userCheck ( db: SQL_lite_3.Database, user: string ) {
 
 // -- =====================================================================================
 
-function info ( groups: TS.Users, oldData?: TS.Users ): TS.Table {
+function info ( groups: TS.Users ): TS.Table {
 
     let table: TS.Table = [];
     let downloadAmount: number;
@@ -275,7 +289,8 @@ function info ( groups: TS.Users, oldData?: TS.Users ): TS.Table {
             usage: downloadAmount,
             Traffic: (downloadAmount/1024/1024/1024).toFixed(1) + " GB",
             Valid: validFor,
-            Days: days
+            Days: days,
+            active: groups[ group ][0].enable === 1 ? true:false
         } );
 
     }
@@ -497,6 +512,8 @@ function reporter ( groups: TS.Users, oldGroups: TS.Users ) {
     // .. remove not activated users
     if ( !ARGv.all ) table = table.filter( x => x.usage > 10000 );
     if ( !ARGv.all ) table = table.filter( x => x.Days >= 0 );
+    if ( !ARGv.all ) table = table.filter( x => x.active );
+    if ( ARGv.sa )   table = table.filter( x => x.Diff );
 
     // .. remove usage column
     for ( let row of table ) delete row.usage;
@@ -718,20 +735,14 @@ function connectionStringify ( cnx: TS.CNX ) {
 
 // -- =====================================================================================
 
-function vlessStringify ( cnx: TS.CNX ) {
-
-    let template = {
-        type: cnx.stream_settings.network,
-        tls: cnx.stream_settings.security
-    }
+function vlessStringify ( cnx: TS.CNX, serverName="ppx.fitored.xyz" ) {
 
     let myCNX = "vless://";
 
-    let sn = "pps.fitored.xyz";
-    try { sn = cnx.stream_settings.tlsSettings.serverName } catch {}
-    try { sn = cnx.stream_settings.xtlsSettings.serverName } catch {}
+    try { serverName = cnx.stream_settings.tlsSettings.serverName } catch {}
+    try { serverName = cnx.stream_settings.xtlsSettings.serverName } catch {}
 
-    myCNX += cnx.settings.clients[0].id + "@" + sn + ":" + cnx.port + "?";
+    myCNX += cnx.settings.clients[0].id + "@" + serverName + ":" + cnx.port + "?";
     myCNX += "type=" + cnx.stream_settings.network + "&";
     myCNX += "security=" + cnx.stream_settings.security + "&";
 
@@ -773,7 +784,7 @@ function vlessStringify ( cnx: TS.CNX ) {
 
 // -- =====================================================================================
 
-function vmessStringify ( cnx: TS.CNX ) {
+function vmessStringify ( cnx: TS.CNX, serverName="ppx.fitored.site" ) {
 
     let type: string = null;
     let path: string = null;
@@ -809,7 +820,7 @@ function vmessStringify ( cnx: TS.CNX ) {
     let template = {
         v: "2",
         ps: cnx.remark,
-        add: "pps.fitored.site",
+        add: serverName,
         port: cnx.port,
         id: cnx.settings.clients[0].id,
         aid: 0,
@@ -948,6 +959,66 @@ async function analysis  ( DBs: SQL_lite_3.Database[], user?: string ) {
     // miniOutPut.push( ...mot );
 
     if ( output.length ) console.log( output );
+
+}
+
+// -- =====================================================================================
+
+async function cnxEditor (
+    name: string,
+    cnxN: string,
+    cnxID: number,
+    cmd: string,
+    exData: { newName?: string }
+) {
+
+    let cnx: TS.CNX;
+    let groups: TS.Users;
+
+    if ( !name ) {
+        console.log( "Pick One:", Object.keys( await grouper( DBs ) ) );
+        return;
+    }
+
+    else {
+        groups = await grouper( DBs );
+        if ( !cnxN && !cnxID ) {
+            console.log( "Which One ?\n" );
+            for ( let cnx of groups[ name ] ) console.log( cnx.id, cnx.remark );
+            return;
+        }
+        else {
+            if ( cnx ) cnx = groups[ name ].find( x => x.remark === cnxN );
+            else cnx = groups[ name ].find( x => x.id === cnxID );
+            if ( !cmd ) console.log( cnx );
+        }
+    }
+
+    switch ( cmd ) {
+
+        case "copy": console.log( "Es wird codiert..." ); break;
+
+        case "rename":
+            if ( !exData.newName ) console.log( "Geben Sie mir eine neue Name bitte..." );
+            else {
+                // .. Der neuName muss " PPS " enthalten
+                if ( exData.newName.includes( " PPS " ) ) {
+                    let qry = `UPDATE inbounds SET remark='${exData.newName}' WHERE id=${cnx.id}`;
+                    // for ( let db of DBs ) await syncQry( db, qry );
+                }
+                else console.log( "Der Name muss 'PPS' enthalten!" );
+            }
+            break;
+
+        case "delete": console.log( "Es wird codiert..." ); break;
+
+        case "delete-party": 
+            for ( let cnx of groups[ name ] ) console.log( cnx.id, cnx.remark );
+            break;
+
+        default: console.log( "Geben Sie mir bitte eine cmd!" ); break;
+
+    }
 
 }
 

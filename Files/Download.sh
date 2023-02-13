@@ -1,13 +1,7 @@
 #!/bin/bash
 
 echo ""
-
-v1="91.107.192.80"
-v2="65.108.253.196"
-v3="5.75.178.218"
-# v4="5.75.198.227"
-
-vi="5.160.179.91"
+. ~/Documents/V3Gate/Files/VPSIPs.sh
 
 # .. redirectcd 
 cd ./db
@@ -27,7 +21,7 @@ else
 fi
 
 # .. remove old files
-rm -rf *.db
+# rm -rf *.db
 
 # .. download DB files
     sshpass -p "'" scp -o StrictHostKeyChecking=no unifino@$v1:/etc/x-ui/x-ui.db ../db/x-ui_1.db &&

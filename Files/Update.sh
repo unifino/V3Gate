@@ -1,11 +1,6 @@
 #!/bin/bash
 
-v1="91.107.192.80"
-v2="65.108.253.196"
-v3="5.75.178.218"
-# v4="5.75.198.227"
-
-vi="5.160.179.91"
+. ~/Documents/V3Gate/Files/VPSIPs.sh
 
 echo ""
 echo "Uploading ...."

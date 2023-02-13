@@ -79,5 +79,6 @@ export type Table = {
     Traffic: string,
     Diff?: number,
     Valid: string,
-    Days: number
+    Days: number,
+    active: boolean
 }[]
