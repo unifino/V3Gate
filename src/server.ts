@@ -5,7 +5,6 @@ const { Transform } = require('stream');
 import * as SQL_lite_3                  from "sqlite3"
 import * as TS                          from "./types/myTypes"
 import { ARGv }                         from "./ARGv"
-import { argv0 } from "process";
 
 // -- =====================================================================================
 
@@ -15,7 +14,8 @@ let dayFactor = hourFactor*24;
 let dbs_name = [
     'x-ui_1.db',
     'x-ui_2.db',
-    'x-ui_3.db'
+    'x-ui_3.db',
+    'x-ui_4.db'
 ];
 let iDBbs = dbs_name.reduce( (x,i) => {
     x.push( Number( i.replace( 'x-ui_', '' ).replace( '.db', '' ) ) );
@@ -24,7 +24,7 @@ let iDBbs = dbs_name.reduce( (x,i) => {
 
 let DBs: SQL_lite_3.Database[] = [];
 let downloadCmd = "./Files/Download.sh";
-let uploadCmd = "./Files/Update.sh";
+let uploadCmd = "./Files/Upload.sh";
 
 // -- =====================================================================================
 
@@ -260,25 +260,23 @@ function info ( groups: TS.Users ): TS.Table {
     for( let group of Object.keys( groups ) ) {
 
         downloadAmount = 0;
-        validFor = "                                ";
-        validFor = "::::::::: | ::::::::::::::::::::";
-        validFor = "          |             ";
+        validFor = "";
         days = 0;
 
         for ( let c of groups[ group ] ) downloadAmount += c.down;
         if ( groups[ group ][0].expiry_time ) {
             days = (groups[ group ][0].expiry_time-now) / dayFactor |0;
-            validFor = days + " Day(s) | ";
-            validFor += new Date( groups[ group ][0].expiry_time ).toString()
-            .split( " " ).filter( (x,i) => iDBbs.includes(i) )
-            // .. put Day at begging
-            .sort( x => x.length === 2 ? -1:1 )
-            .join( " " )
+            validFor = days + " Day(s)";
+            // validFor += new Date( groups[ group ][0].expiry_time ).toString()
+            // .split( " " ).filter( (x,i) => iDBbs.includes(i) )
+            // // .. put Day at begging
+            // .sort( x => x.length === 2 ? -1:1 )
+            // .join( " " )
         }
         else days = null;
 
         if ( groups[ group ][0].expiry_time && groups[ group ][0].expiry_time < now )
-            validFor = "--------- | -----------";
+            validFor = "---------";
 
         // .. nur Verschönere
         if ( validFor.length === 31 ) validFor = " " + validFor;
@@ -513,7 +511,7 @@ function reporter ( groups: TS.Users, oldGroups: TS.Users ) {
     if ( !ARGv.all ) table = table.filter( x => x.usage > 10000 );
     if ( !ARGv.all ) table = table.filter( x => x.Days >= 0 );
     if ( !ARGv.all ) table = table.filter( x => x.active );
-    if ( ARGv.sa )   table = table.filter( x => x.Diff );
+    if ( ARGv.sa && !ARGv.all ) table = table.filter( x => x.Diff );
 
     // .. remove usage column
     for ( let row of table ) delete row.usage;

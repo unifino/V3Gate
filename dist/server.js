@@ -21,7 +21,8 @@ let dayFactor = hourFactor * 24;
 let dbs_name = [
     'x-ui_1.db',
     'x-ui_2.db',
-    'x-ui_3.db'
+    'x-ui_3.db',
+    'x-ui_4.db'
 ];
 let iDBbs = dbs_name.reduce((x, i) => {
     x.push(Number(i.replace('x-ui_', '').replace('.db', '')));
@@ -29,7 +30,7 @@ let iDBbs = dbs_name.reduce((x, i) => {
 }, []);
 let DBs = [];
 let downloadCmd = "./Files/Download.sh";
-let uploadCmd = "./Files/Update.sh";
+let uploadCmd = "./Files/Upload.sh";
 // -- =====================================================================================
 init();
 // -- =====================================================================================
@@ -243,25 +244,23 @@ function info(groups) {
     let days;
     for (let group of Object.keys(groups)) {
         downloadAmount = 0;
-        validFor = "                                ";
-        validFor = "::::::::: | ::::::::::::::::::::";
-        validFor = "          |             ";
+        validFor = "";
         days = 0;
         for (let c of groups[group])
             downloadAmount += c.down;
         if (groups[group][0].expiry_time) {
             days = (groups[group][0].expiry_time - now) / dayFactor | 0;
-            validFor = days + " Day(s) | ";
-            validFor += new Date(groups[group][0].expiry_time).toString()
-                .split(" ").filter((x, i) => iDBbs.includes(i))
-                // .. put Day at begging
-                .sort(x => x.length === 2 ? -1 : 1)
-                .join(" ");
+            validFor = days + " Day(s)";
+            // validFor += new Date( groups[ group ][0].expiry_time ).toString()
+            // .split( " " ).filter( (x,i) => iDBbs.includes(i) )
+            // // .. put Day at begging
+            // .sort( x => x.length === 2 ? -1:1 )
+            // .join( " " )
         }
         else
             days = null;
         if (groups[group][0].expiry_time && groups[group][0].expiry_time < now)
-            validFor = "--------- | -----------";
+            validFor = "---------";
         // .. nur Verschönere
         if (validFor.length === 31)
             validFor = " " + validFor;
@@ -438,7 +437,7 @@ function reporter(groups, oldGroups) {
         table = table.filter(x => x.Days >= 0);
     if (!ARGv_1.ARGv.all)
         table = table.filter(x => x.active);
-    if (ARGv_1.ARGv.sa)
+    if (ARGv_1.ARGv.sa && !ARGv_1.ARGv.all)
         table = table.filter(x => x.Diff);
     // .. remove usage column
     for (let row of table)
