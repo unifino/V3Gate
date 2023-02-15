@@ -42,6 +42,8 @@ async function init () {
 
     if ( ( ARGv.update || ARGv.U ) && !ARGv.x ) runShellCmd( uploadCmd );
 
+    resetIDs( DBs );
+
 }
 
 // -- =====================================================================================
@@ -635,19 +637,19 @@ async function getCount ( db: SQL_lite_3.Database ): Promise<number>{
 
 // -- =====================================================================================
 
-async function resetIDs ( db: SQL_lite_3.Database, start: number, end: number ): Promise<number>{
+async function resetIDs ( DBs: SQL_lite_3.Database[] ) {
 
-    // for ( let i=start; i<=end; i++ ) {
-    //     let qry = "UPDATE inbounds SET id="+ (i+start) +" WHERE id="+i;
-    //     db.all( qry, e => console.log(e)  );
+    for ( let db of DBs ) {
+        let qry = "SELECT id from inbounds";
+        let ids = (await syncQry( db, qry )).reduce( (x,i) => { x.push(i.id); return x } , []);
+        ids = ids.sort( (a,b) => a>b ? 1:-1 );
+        for ( let i=1; i<=ids.length; i++ ) {
+            qry = `UPDATE inbounds SET id=${i} WHERE id=${ids[i-1]}`;
+            await syncQry( db, qry );
+        }
+    }
 
-    // }
-
-    return new Promise( (rs, rx) => {
-    //     db.all( qry, (e, rows: TS.CNX[]) => {
-    //         !e ? rs(rows[0].id) : rx(e);
-    //     } )
-    } )
+    console.log( "Fertig!" );
 
 }
 
