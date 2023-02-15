@@ -41,6 +41,7 @@ function init() {
         yield ARGvCommandsController();
         if ((ARGv_1.ARGv.update || ARGv_1.ARGv.U) && !ARGv_1.ARGv.x)
             runShellCmd(uploadCmd);
+        // resetIDs( DBs );
     });
 }
 // -- =====================================================================================
@@ -532,17 +533,18 @@ function getCount(db) {
     });
 }
 // -- =====================================================================================
-function resetIDs(db, start, end) {
+function resetIDs(DBs) {
     return __awaiter(this, void 0, void 0, function* () {
-        // for ( let i=start; i<=end; i++ ) {
-        //     let qry = "UPDATE inbounds SET id="+ (i+start) +" WHERE id="+i;
-        //     db.all( qry, e => console.log(e)  );
-        // }
-        return new Promise((rs, rx) => {
-            //     db.all( qry, (e, rows: TS.CNX[]) => {
-            //         !e ? rs(rows[0].id) : rx(e);
-            //     } )
-        });
+        for (let db of DBs) {
+            let qry = "SELECT id from inbounds";
+            let ids = (yield syncQry(db, qry)).reduce((x, i) => { x.push(i.id); return x; }, []);
+            ids = ids.sort((a, b) => a > b ? 1 : -1);
+            for (let i = 1; i <= ids.length; i++) {
+                qry = `UPDATE inbounds SET id=${i} WHERE id=${ids[i - 1]}`;
+                yield syncQry(db, qry);
+            }
+        }
+        console.log("Fertig!");
     });
 }
 // -- =====================================================================================

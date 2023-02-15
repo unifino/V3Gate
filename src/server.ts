@@ -42,8 +42,6 @@ async function init () {
 
     if ( ( ARGv.update || ARGv.U ) && !ARGv.x ) runShellCmd( uploadCmd );
 
-    resetIDs( DBs );
-
 }
 
 // -- =====================================================================================
@@ -854,6 +852,9 @@ async function newPorts ( db: SQL_lite_3.Database, qty: number ): Promise<number
     let randPorts: number[] = [];
     let aNewPort: number;
 
+    // .. Erhaltene Ports
+    ports.push(7333,22);
+
     do {
         aNewPort = Math.floor( Math.random() * 65535 );
         if ( !ports.includes( aNewPort ) ) {
@@ -886,17 +887,8 @@ async function syncQry ( db: SQL_lite_3.Database, qry: string ): Promise<TS.CNX[
 async function resetTraffic ( DBs: SQL_lite_3.Database[] ) {
 
     let qry = "UPDATE inbounds SET up=0, down=0";
-    // let append = ( new Date() ).getTime();
-    // let addColumnUpQry = `ALTER TABLE inbounds ADD COLUMN up_${append}`;
-    // let addColumnDownQry = `ALTER TABLE inbounds ADD COLUMN down_${append}`;
-    // let copyQry = `UPDATE inbounds SET up_${append}=up, down_${append}=down`;
 
-    for ( let db of DBs ) {
-        // await syncQry( db, addColumnUpQry );
-        // await syncQry( db, addColumnDownQry );
-        // await syncQry( db, copyQry );
-        await syncQry( db, qry );
-    }
+    for ( let db of DBs ) await syncQry( db, qry );
 
     console.log( `All Traffics has been RESET!` );
 
