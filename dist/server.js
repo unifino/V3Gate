@@ -41,7 +41,6 @@ function init() {
         yield ARGvCommandsController();
         if ((ARGv_1.ARGv.update || ARGv_1.ARGv.U) && !ARGv_1.ARGv.x)
             runShellCmd(uploadCmd);
-        // resetIDs( DBs );
     });
 }
 // -- =====================================================================================
@@ -216,6 +215,12 @@ function ARGvCommandsController() {
                 //     )
                 //     .sort( (a,b) => a>b ? 1:-1 ) 
                 // );
+            })
+        })
+            .command({ command: 'spy',
+            describe: 'Spion',
+            handler: (argv) => __awaiter(this, void 0, void 0, function* () {
+                yield spy_agent(DBs, argv.name);
             })
         })
             .parse();
@@ -707,6 +712,8 @@ function newPorts(db, qty) {
         let ports = rows.reduce((c, i) => { c.push(i.port); return c; }, []);
         let randPorts = [];
         let aNewPort;
+        // .. Erhaltene Ports
+        ports.push(7333, 22);
         do {
             aNewPort = Math.floor(Math.random() * 65535);
             if (!ports.includes(aNewPort)) {
@@ -736,16 +743,8 @@ function syncQry(db, qry) {
 function resetTraffic(DBs) {
     return __awaiter(this, void 0, void 0, function* () {
         let qry = "UPDATE inbounds SET up=0, down=0";
-        // let append = ( new Date() ).getTime();
-        // let addColumnUpQry = `ALTER TABLE inbounds ADD COLUMN up_${append}`;
-        // let addColumnDownQry = `ALTER TABLE inbounds ADD COLUMN down_${append}`;
-        // let copyQry = `UPDATE inbounds SET up_${append}=up, down_${append}=down`;
-        for (let db of DBs) {
-            // await syncQry( db, addColumnUpQry );
-            // await syncQry( db, addColumnDownQry );
-            // await syncQry( db, copyQry );
+        for (let db of DBs)
             yield syncQry(db, qry);
-        }
         console.log(`All Traffics has been RESET!`);
     });
 }
@@ -800,6 +799,16 @@ function analysis(DBs, user) {
         // miniOutPut.push( ...mot );
         if (output.length)
             console.log(output);
+    });
+}
+// -- =====================================================================================
+function spy_agent(DBs, user) {
+    return __awaiter(this, void 0, void 0, function* () {
+        let qry = "SELECT port FROM inbounds WHERE remark LIKE '" + user + " PPS%'";
+        yield userCheck(DBs[0], user);
+        let answer = yield syncQry(DBs[0], qry);
+        for (let p of answer.reduce((x, i) => { x.push(i.port); return x; }, []))
+            console.log(`sudo iptables -I INPUT -p tcp --dport ${p} --syn -j LOG --log-prefix "${user} SPY: "`);
     });
 }
 // -- =====================================================================================

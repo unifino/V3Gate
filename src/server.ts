@@ -224,6 +224,13 @@ async function ARGvCommandsController () {
         }
     } )
 
+    .command( { command: 'spy',
+    describe: 'Spion',
+    handler: async argv => {
+        await spy_agent( DBs, argv.name );
+    }
+} )
+
     .parse();
 
 }
@@ -951,6 +958,20 @@ async function analysis  ( DBs: SQL_lite_3.Database[], user?: string ) {
     // miniOutPut.push( ...mot );
 
     if ( output.length ) console.log( output );
+
+}
+
+// -- =====================================================================================
+
+async function spy_agent ( DBs: SQL_lite_3.Database[], user: string ) {
+
+    let qry = "SELECT port FROM inbounds WHERE remark LIKE '" + user + " PPS%'";
+
+    await userCheck( DBs[0], user );
+    let answer = await syncQry ( DBs[0], qry  );
+
+    for ( let p of answer.reduce( (x,i) => { x.push(i.port); return x; } , [] ) ) 
+        console.log( `sudo iptables -I INPUT -p tcp --dport ${p} --syn -j LOG --log-prefix "${user} SPY: "` );
 
 }
 
