@@ -971,7 +971,7 @@ async function spy_agent ( DBs: SQL_lite_3.Database[], user: string ) {
     let answer = await syncQry ( DBs[0], qry  );
 
     for ( let p of answer.reduce( (x,i) => { x.push(i.port); return x; } , [] ) ) 
-        console.log( `sudo iptables -I INPUT -p tcp --dport ${p} --syn -j LOG --log-prefix "${user} SPY: "` );
+        runShellCmd( `sudo iptables -I INPUT -p tcp --dport ${p} --syn -j LOG --log-prefix "${user} SPY: "` );
 
 }
 
