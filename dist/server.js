@@ -223,6 +223,12 @@ function ARGvCommandsController() {
                 yield spy_agent(DBs, argv.name);
             })
         })
+            .command({ command: 'resetIDs',
+            describe: 'IDs zurücksetzen',
+            handler: (argv) => __awaiter(this, void 0, void 0, function* () {
+                yield resetIDs(DBs);
+            })
+        })
             .parse();
     });
 }
@@ -616,7 +622,7 @@ function connectionStringify(cnx) {
     return myCNX;
 }
 // -- =====================================================================================
-function vlessStringify(cnx, serverName = "ppx.fitored.xyz") {
+function vlessStringify(cnx, serverName = "pps.fitored.xyz") {
     let myCNX = "vless://";
     try {
         serverName = cnx.stream_settings.tlsSettings.serverName;
@@ -657,7 +663,7 @@ function vlessStringify(cnx, serverName = "ppx.fitored.xyz") {
     return myCNX + "#" + encodeURIComponent(cnx.remark);
 }
 // -- =====================================================================================
-function vmessStringify(cnx, serverName = "ppx.fitored.site") {
+function vmessStringify(cnx, serverName = "pps.fitored.site") {
     let type = null;
     let path = null;
     let prefix = "vmess://";
@@ -808,7 +814,7 @@ function spy_agent(DBs, user) {
         yield userCheck(DBs[0], user);
         let answer = yield syncQry(DBs[0], qry);
         for (let p of answer.reduce((x, i) => { x.push(i.port); return x; }, []))
-            console.log(`sudo iptables -I INPUT -p tcp --dport ${p} --syn -j LOG --log-prefix "${user} SPY: "`);
+            runShellCmd(`sudo iptables -I INPUT -p tcp --dport ${p} --syn -j LOG --log-prefix "${user} SPY: "`);
     });
 }
 // -- =====================================================================================

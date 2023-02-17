@@ -229,7 +229,14 @@ async function ARGvCommandsController () {
     handler: async argv => {
         await spy_agent( DBs, argv.name );
     }
-} )
+    } )
+
+    .command( { command: 'resetIDs',
+        describe: 'IDs zurücksetzen',
+        handler: async argv => {
+            await resetIDs( DBs );
+        }
+    } )
 
     .parse();
 
@@ -740,7 +747,7 @@ function connectionStringify ( cnx: TS.CNX ) {
 
 // -- =====================================================================================
 
-function vlessStringify ( cnx: TS.CNX, serverName="ppx.fitored.xyz" ) {
+function vlessStringify ( cnx: TS.CNX, serverName="pps.fitored.xyz" ) {
 
     let myCNX = "vless://";
 
@@ -789,7 +796,7 @@ function vlessStringify ( cnx: TS.CNX, serverName="ppx.fitored.xyz" ) {
 
 // -- =====================================================================================
 
-function vmessStringify ( cnx: TS.CNX, serverName="ppx.fitored.site" ) {
+function vmessStringify ( cnx: TS.CNX, serverName="pps.fitored.site" ) {
 
     let type: string = null;
     let path: string = null;
