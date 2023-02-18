@@ -263,11 +263,6 @@ function info(groups) {
         if (groups[group][0].expiry_time) {
             days = (groups[group][0].expiry_time - now) / dayFactor | 0;
             validFor = days + " Day(s)";
-            // validFor += new Date( groups[ group ][0].expiry_time ).toString()
-            // .split( " " ).filter( (x,i) => iDBbs.includes(i) )
-            // // .. put Day at begging
-            // .sort( x => x.length === 2 ? -1:1 )
-            // .join( " " )
         }
         else
             days = null;
@@ -276,6 +271,9 @@ function info(groups) {
         // .. nur Verschönere
         if (validFor.length === 31)
             validFor = " " + validFor;
+        // for ( let entry of groups[ group ] ) {
+        //     if ( !entry.enable ) console.log( group );
+        // }
         table.push({
             Name: group,
             CNX: groups[group].length / dbs_name.length,
@@ -291,11 +289,29 @@ function info(groups) {
 // -- =====================================================================================
 function grouper(DBs) {
     return __awaiter(this, void 0, void 0, function* () {
-        let result_tmp = {};
+        let group = {};
         // .. Schleife über DBs
         for (let db of DBs)
-            yield groupName(db, result_tmp);
-        return result_tmp;
+            yield groupName(db, group);
+        return group;
+    });
+}
+// -- =====================================================================================
+function groupName(db, container) {
+    return __awaiter(this, void 0, void 0, function* () {
+        let qry = 'select * from inbounds';
+        let tmpName = "";
+        let rows = yield syncQry(db, qry);
+        // .. loop over results
+        for (let i = 0; i < rows.length; i++) {
+            tmpName = rows[i].remark.split('PPS')[0].trim();
+            // .. create new user
+            if (!container[tmpName])
+                container[tmpName] = [];
+            // .. store download amounts in myUsers
+            container[tmpName].push(rows[i]);
+        }
+        return container;
     });
 }
 // -- =====================================================================================
@@ -327,30 +343,6 @@ function userTimer(DBs, user, days) {
         for (let db of DBs)
             yield timer(db, user, lastTime);
         console.log(`Die Benutzer: ${user} ist bis ${lastTime} verfügbar`);
-    });
-}
-// -- =====================================================================================
-function groupName(db, container) {
-    let qry = 'select * from inbounds';
-    let tmpName = "";
-    return new Promise((rs, rx) => {
-        // .. Read Query
-        db.all(qry, (e, rows) => {
-            // .. loop over results
-            for (let i = 0; i < rows.length; i++) {
-                tmpName = rows[i].remark.split('PPS')[0].trim();
-                // .. create new user
-                if (!container[tmpName])
-                    container[tmpName] = [];
-                // .. store download amounts in myUsers
-                container[tmpName].push(rows[i]);
-            }
-            // .. report any error
-            if (e)
-                rx(e);
-            // .. resolve
-            rs(container);
-        });
     });
 }
 // -- =====================================================================================
