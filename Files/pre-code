@@ -1,1 +1,44 @@
-adduser --gecos GECOS unifino && adduser unifino sudo && apt update && apt upgrade -y && apt install curl npm socat -y && curl https://get.acme.sh | sh && ~/.acme.sh/acme.sh --set-default-ca --server letsencrypt && ~/.acme.sh/acme.sh --register-account -m unifino@protonmail.com && npm install -g nodemon && bash <(curl -Ls https://raw.githubusercontent.com/vaxilu/x-ui/master/install.sh) && echo "alias i='curl icanhazip.com'" >> /home/unifino/.bashrc && echo "alias c='sudo cp /etc/x-ui/x-ui.db ~'" >> /home/unifino/.bashrc && echo "alias m='sudo mv /etc/x-ui/x-ui.db /etc/x-ui/x-ui.db.bak && sudo mv ~/x-ui.db.zero /etc/x-ui/x-ui.db'" >> /home/unifino/.bashrc && echo "alias reboot='sudo reboot'" >> /home/unifino/.bashrc && touch server.js && i=$(curl icanhazip.com) && echo "var http = require('http');let ip = '"$i"';let meta = '<meta http-equiv=\'Refresh\' content=\'0; URL=https://fitored.ir/\' />';http.createServer( function (req, res) {res.writeHead( 200, {'Content-Type': 'text/html'} );res.end( '<head>' + meta + '</head>' );} ).listen(80, ip);console.log('Server running at http://' + ip);" > server.js && nano /etc/ssh/sshd_config && chmod 777 -R /etc/x-ui/
+adduser --gecos GECOS unifino \
+&& adduser unifino sudo \
+&& apt update \
+&& apt upgrade -y \
+&& bash <(curl -Ls https://raw.githubusercontent.com/vaxilu/x-ui/master/install.sh) \
+&& apt install curl sshpass -y \
+&& echo "alias i='curl icanhazip.com'" >> /home/unifino/.bashrc \
+&& echo "alias reboot='sudo reboot'" >> /home/unifino/.bashrc \
+&& echo "alias V3Gate='cd ~/Documents/V3Gate && node ./dist/server.js'" >> /home/unifino/.bashrc \
+&& echo "alias v3gate='cd ~/Documents/V3Gate && node ./dist/server.js'" >> /home/unifino/.bashrc \
+&& touch server.js \
+&& echo 'Port 1001' >> /etc/ssh/sshd_config \
+&& echo 'Port 7333' >> /etc/ssh/sshd_config \
+&& i=$(curl icanhazip.com) \
+&& echo "var http = require('http');let ip = '"$i"';let meta = '<meta http-equiv=\'Refresh\' content=\'0; URL=https://fitored.ir/\' />';http.createServer( function (req, res) {res.writeHead( 200, {'Content-Type': 'text/html'} );res.end( '<head>' + meta + '</head>' );} ).listen(80, ip);console.log('Server running at http://' + ip);" > server.js \
+&& chmod 777 -R /etc/x-ui/ \
+&& chmod 777 -R /var/log/ \
+&& wget -N --no-check-certificate https://github.com/teddysun/across/raw/master/bbr.sh && chmod +x bbr.sh && bash bbr.sh
+
+
+
+cd ~ \
+&& bash <(curl -Ls https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.3/install.sh) \
+&& git clone https://github.com/unifino/v3gate.git \
+&& export NVM_DIR="$HOME/.nvm" \
+&& [ -s "$NVM_DIR/nvm.sh" ] \
+&& \. "$NVM_DIR/nvm.sh" \
+&& [ -s "$NVM_DIR/bash_completion" ] \
+&& \. "$NVM_DIR/bash_completion" \
+&& mkdir Documents \
+&& mv v3gate ./Documents/V3Gate \
+&& cd ~/Documents/V3Gate \
+&& nvm install node \
+&& npm install -g nodemon \
+&& npm install \
+&& npm run build 
+
+
+
+
+scp * root@195.201.97.106:/root/
+
+sudo nano /etc/ssh/sshd_config \
+&& sudo systemctl restart sshd

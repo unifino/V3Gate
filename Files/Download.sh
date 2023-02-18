@@ -31,7 +31,9 @@ fi
     sshpass -p "'" scp -P 7333 -o StrictHostKeyChecking=no unifino@$v3:/etc/x-ui/x-ui.db ../db/x-ui_3.db &&
     echo "VPS3 ... Done!" &
     sshpass -p "'" scp -P 7333 -o StrictHostKeyChecking=no unifino@$v4:/etc/x-ui/x-ui.db ../db/x-ui_4.db &&
-    echo "VPS4 ... Done!"
+    echo "VPS4 ... Done!" &
+    sshpass -p "'" scp -P 7333 -o StrictHostKeyChecking=no unifino@$v5:/etc/x-ui/x-ui.db ../db/x-ui_5.db &&
+    echo "VPS5 ... Done!"
 
 # .. wait until all dbs be downloaded
 wait

@@ -735,7 +735,7 @@ function connectionStringify ( cnx: TS.CNX ) {
 
 // -- =====================================================================================
 
-function vlessStringify ( cnx: TS.CNX, serverName="pps.fitored.xyz" ) {
+function vlessStringify ( cnx: TS.CNX, serverName="ppx.fitored.site" ) {
 
     let myCNX = "vless://";
 
@@ -784,7 +784,7 @@ function vlessStringify ( cnx: TS.CNX, serverName="pps.fitored.xyz" ) {
 
 // -- =====================================================================================
 
-function vmessStringify ( cnx: TS.CNX, serverName="pps.fitored.site" ) {
+function vmessStringify ( cnx: TS.CNX, serverName="ppx.fitored.site" ) {
 
     let type: string = null;
     let path: string = null;

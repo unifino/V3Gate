@@ -614,7 +614,7 @@ function connectionStringify(cnx) {
     return myCNX;
 }
 // -- =====================================================================================
-function vlessStringify(cnx, serverName = "pps.fitored.xyz") {
+function vlessStringify(cnx, serverName = "ppx.fitored.site") {
     let myCNX = "vless://";
     try {
         serverName = cnx.stream_settings.tlsSettings.serverName;
@@ -655,7 +655,7 @@ function vlessStringify(cnx, serverName = "pps.fitored.xyz") {
     return myCNX + "#" + encodeURIComponent(cnx.remark);
 }
 // -- =====================================================================================
-function vmessStringify(cnx, serverName = "pps.fitored.site") {
+function vmessStringify(cnx, serverName = "ppx.fitored.site") {
     let type = null;
     let path = null;
     let prefix = "vmess://";
