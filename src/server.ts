@@ -1015,6 +1015,11 @@ async function spy_agent ( DBs: SQL_lite_3.Database[], user?: string ) {
     answer = answer.filter( x => !x.remark.includes( "Rasul" ) );
     answer = answer.filter( x => !x.remark.includes( "Soheila" ) );
     answer = answer.filter( x => !x.remark.includes( "Hashemi" ) );
+    answer = answer.filter( x => !x.remark.includes( "Hesam" ) );
+    answer = answer.filter( x => !x.remark.includes( "Sargol" ) );
+    answer = answer.filter( x => !x.remark.includes( "Yasmin" ) );
+    answer = answer.filter( x => !x.remark.includes( "Meysam" ) );
+    answer = answer.filter( x => !x.remark.includes( "Hosseyni" ) );
 
     console.log( answer.length );
     for ( let x of answer ) {
