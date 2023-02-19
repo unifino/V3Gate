@@ -1006,7 +1006,11 @@ async function spy_agent ( DBs: SQL_lite_3.Database[], user?: string ) {
     answer = answer.filter( x => !x.remark.includes( "Rasul X05" ) );
     answer = answer.filter( x => !x.remark.includes( "Rasul X06" ) );
     answer = answer.filter( x => !x.remark.includes( "Rasul X07" ) );
-    // answer = answer.filter( x => !x.remark.includes( "Rasul X07" ) );
+    answer = answer.filter( x => !x.remark.includes( "Hatef" ) );
+    answer = answer.filter( x => !x.remark.includes( "Maman" ) );
+    answer = answer.filter( x => !x.remark.includes( "Fajo" ) );
+    answer = answer.filter( x => !x.remark.includes( "Fox X01" ) );
+    answer = answer.filter( x => !x.remark.includes( "Fox X02" ) );
 
     for ( let x of answer ) {
         cmd = `sudo iptables -I INPUT -p tcp --dport ${x.port} --syn -j LOG --log-prefix "${x.remark.split( " PPS " )[0]} SPY: "`;
