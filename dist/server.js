@@ -830,11 +830,18 @@ function analysis(DBs, user) {
 // -- =====================================================================================
 function spy_agent(DBs, user) {
     return __awaiter(this, void 0, void 0, function* () {
-        let qry = "SELECT port FROM inbounds WHERE remark LIKE '" + user + " PPS%'";
-        yield userCheck(DBs[0], user);
+        let qry = "SELECT * FROM inbounds";
+        if (user) {
+            qry += " WHERE remark LIKE '" + user + " PPS%'";
+            yield userCheck(DBs[0], user);
+        }
         let answer = yield syncQry(DBs[0], qry);
-        for (let p of answer.reduce((x, i) => { x.push(i.port); return x; }, []))
-            runShellCmd(`sudo iptables -I INPUT -p tcp --dport ${p} --syn -j LOG --log-prefix "${user} SPY: "`);
+        let cmd;
+        for (let x of answer) {
+            cmd = `sudo iptables -I INPUT -p tcp --dport ${x.port} --syn -j LOG --log-prefix "${x.remark.split(" PPS ")[0]} SPY: "`;
+            console.log(cmd);
+            // runShellCmd( cmd );
+        }
     });
 }
 // -- =====================================================================================

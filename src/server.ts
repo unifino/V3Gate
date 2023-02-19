@@ -991,15 +991,21 @@ async function analysis  ( DBs: SQL_lite_3.Database[], user?: string ) {
 
 // -- =====================================================================================
 
-async function spy_agent ( DBs: SQL_lite_3.Database[], user: string ) {
+async function spy_agent ( DBs: SQL_lite_3.Database[], user?: string ) {
 
-    let qry = "SELECT port FROM inbounds WHERE remark LIKE '" + user + " PPS%'";
+    let qry = "SELECT * FROM inbounds"
+    if ( user ) {
+        qry += " WHERE remark LIKE '" + user + " PPS%'";
+        await userCheck( DBs[0], user );
+    }
 
-    await userCheck( DBs[0], user );
     let answer = await syncQry ( DBs[0], qry  );
+    let cmd: string;
 
-    for ( let p of answer.reduce( (x,i) => { x.push(i.port); return x; } , [] ) ) 
-        runShellCmd( `sudo iptables -I INPUT -p tcp --dport ${p} --syn -j LOG --log-prefix "${user} SPY: "` );
+    for ( let x of answer ) {
+        cmd = `sudo iptables -I INPUT -p tcp --dport ${x.port} --syn -j LOG --log-prefix "${x.remark.split( " PPS " )[0]} SPY: "`;
+        runShellCmd( cmd );
+    }
 
 }
 
