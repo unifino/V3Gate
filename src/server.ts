@@ -1002,24 +1002,24 @@ async function spy_agent ( DBs: SQL_lite_3.Database[], user?: string ) {
     let answer = await syncQry ( DBs[0], qry  );
     let cmd: string;
 
-    answer = answer.filter( x => !x.remark.includes( "Rasul X04" ) );
-    answer = answer.filter( x => !x.remark.includes( "Rasul X05" ) );
-    answer = answer.filter( x => !x.remark.includes( "Rasul X06" ) );
-    answer = answer.filter( x => !x.remark.includes( "Rasul X07" ) );
-    answer = answer.filter( x => !x.remark.includes( "Hatef" ) );
-    answer = answer.filter( x => !x.remark.includes( "Maman" ) );
-    answer = answer.filter( x => !x.remark.includes( "Fajo" ) );
-    answer = answer.filter( x => !x.remark.includes( "Fox X01" ) );
-    answer = answer.filter( x => !x.remark.includes( "Fox X02" ) );
-    answer = answer.filter( x => !x.remark.includes( "Fox X02" ) );
-    answer = answer.filter( x => !x.remark.includes( "Rasul" ) );
-    answer = answer.filter( x => !x.remark.includes( "Soheila" ) );
-    answer = answer.filter( x => !x.remark.includes( "Hashemi" ) );
-    answer = answer.filter( x => !x.remark.includes( "Hesam" ) );
-    answer = answer.filter( x => !x.remark.includes( "Sargol" ) );
-    answer = answer.filter( x => !x.remark.includes( "Yasmin" ) );
-    answer = answer.filter( x => !x.remark.includes( "Meysam" ) );
-    answer = answer.filter( x => !x.remark.includes( "Hosseyni" ) );
+    // answer = answer.filter( x => !x.remark.includes( "Rasul X04" ) );
+    // answer = answer.filter( x => !x.remark.includes( "Rasul X05" ) );
+    // answer = answer.filter( x => !x.remark.includes( "Rasul X06" ) );
+    // answer = answer.filter( x => !x.remark.includes( "Rasul X07" ) );
+    // answer = answer.filter( x => !x.remark.includes( "Hatef" ) );
+    // answer = answer.filter( x => !x.remark.includes( "Maman" ) );
+    // answer = answer.filter( x => !x.remark.includes( "Fajo" ) );
+    // answer = answer.filter( x => !x.remark.includes( "Fox X01" ) );
+    // answer = answer.filter( x => !x.remark.includes( "Fox X02" ) );
+    // answer = answer.filter( x => !x.remark.includes( "Fox X02" ) );
+    // answer = answer.filter( x => !x.remark.includes( "Rasul" ) );
+    // answer = answer.filter( x => !x.remark.includes( "Soheila" ) );
+    // answer = answer.filter( x => !x.remark.includes( "Hashemi" ) );
+    // answer = answer.filter( x => !x.remark.includes( "Hesam" ) );
+    // answer = answer.filter( x => !x.remark.includes( "Sargol" ) );
+    // answer = answer.filter( x => !x.remark.includes( "Yasmin" ) );
+    // answer = answer.filter( x => !x.remark.includes( "Meysam" ) );
+    // answer = answer.filter( x => !x.remark.includes( "Hosseyni" ) );
 
     console.log( answer.length );
     for ( let x of answer ) {
