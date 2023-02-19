@@ -839,8 +839,7 @@ function spy_agent(DBs, user) {
         let cmd;
         for (let x of answer) {
             cmd = `sudo iptables -I INPUT -p tcp --dport ${x.port} --syn -j LOG --log-prefix "${x.remark.split(" PPS ")[0]} SPY: "`;
-            console.log(cmd);
-            // runShellCmd( cmd );
+            runShellCmd(cmd);
         }
     });
 }

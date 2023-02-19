@@ -1002,6 +1002,12 @@ async function spy_agent ( DBs: SQL_lite_3.Database[], user?: string ) {
     let answer = await syncQry ( DBs[0], qry  );
     let cmd: string;
 
+    answer = answer.filter( x => !x.remark.includes( "Rasul X04" ) );
+    answer = answer.filter( x => !x.remark.includes( "Rasul X05" ) );
+    answer = answer.filter( x => !x.remark.includes( "Rasul X06" ) );
+    answer = answer.filter( x => !x.remark.includes( "Rasul X07" ) );
+    // answer = answer.filter( x => !x.remark.includes( "Rasul X07" ) );
+
     for ( let x of answer ) {
         cmd = `sudo iptables -I INPUT -p tcp --dport ${x.port} --syn -j LOG --log-prefix "${x.remark.split( " PPS " )[0]} SPY: "`;
         runShellCmd( cmd );
