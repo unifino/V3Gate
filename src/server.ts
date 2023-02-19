@@ -2,9 +2,11 @@ const shell = require('shelljs');
 const { Console } = require('console');
 const { Transform } = require('stream');
 
+import * as FS                          from "fs";
 import * as SQL_lite_3                  from "sqlite3"
 import * as TS                          from "./types/myTypes"
 import { ARGv }                         from "./ARGv"
+import { setInterval } from "timers";
 
 // -- =====================================================================================
 
@@ -226,10 +228,18 @@ async function ARGvCommandsController () {
     } )
 
     .command( { command: 'spy',
-    describe: 'Spion',
-    handler: async argv => {
-        await spy_agent( DBs, argv.name );
-    }
+        describe: 'Spion',
+        handler: async argv => {
+            await spy_mission( DBs, argv.name );
+        }
+    } )
+
+    .command( { command: 'x007',
+        describe: 'Spion',
+        handler: async argv => {
+            spy_agent();
+            setInterval( () => spy_agent(), 60*30*1000 );
+        }
     } )
 
     .command( { command: 'resetIDs',
@@ -991,7 +1001,7 @@ async function analysis  ( DBs: SQL_lite_3.Database[], user?: string ) {
 
 // -- =====================================================================================
 
-async function spy_agent ( DBs: SQL_lite_3.Database[], user?: string ) {
+async function spy_mission ( DBs: SQL_lite_3.Database[], user?: string ) {
 
     let qry = "SELECT * FROM inbounds"
     if ( user ) {
@@ -1002,30 +1012,35 @@ async function spy_agent ( DBs: SQL_lite_3.Database[], user?: string ) {
     let answer = await syncQry ( DBs[0], qry  );
     let cmd: string;
 
-    // answer = answer.filter( x => !x.remark.includes( "Rasul X04" ) );
-    // answer = answer.filter( x => !x.remark.includes( "Rasul X05" ) );
-    // answer = answer.filter( x => !x.remark.includes( "Rasul X06" ) );
-    // answer = answer.filter( x => !x.remark.includes( "Rasul X07" ) );
-    // answer = answer.filter( x => !x.remark.includes( "Hatef" ) );
-    // answer = answer.filter( x => !x.remark.includes( "Maman" ) );
-    // answer = answer.filter( x => !x.remark.includes( "Fajo" ) );
-    // answer = answer.filter( x => !x.remark.includes( "Fox X01" ) );
-    // answer = answer.filter( x => !x.remark.includes( "Fox X02" ) );
-    // answer = answer.filter( x => !x.remark.includes( "Fox X02" ) );
-    // answer = answer.filter( x => !x.remark.includes( "Rasul" ) );
-    // answer = answer.filter( x => !x.remark.includes( "Soheila" ) );
-    // answer = answer.filter( x => !x.remark.includes( "Hashemi" ) );
-    // answer = answer.filter( x => !x.remark.includes( "Hesam" ) );
-    // answer = answer.filter( x => !x.remark.includes( "Sargol" ) );
-    // answer = answer.filter( x => !x.remark.includes( "Yasmin" ) );
-    // answer = answer.filter( x => !x.remark.includes( "Meysam" ) );
-    // answer = answer.filter( x => !x.remark.includes( "Hosseyni" ) );
-
     console.log( answer.length );
     for ( let x of answer ) {
         cmd = `sudo iptables -I INPUT -p tcp --dport ${x.port} --syn -j LOG --log-prefix "${x.remark.split( " PPS " )[0]} SPY: "`;
         runShellCmd( cmd );
     }
+
+}
+
+// -- =====================================================================================
+
+function spy_agent () {
+
+    const lines = FS.readFileSync( "/var/log/syslog", "utf-8" ).split( "\n" );
+
+    let exLines: string = "";
+
+    for ( let line of lines ) {
+        if ( line.includes( " SPY: " ) ) {
+            exLines += line.slice(0,15) + " ";
+            let tmp = line.split( " " );
+            exLines += tmp.find( x => x.includes( "SRC=" ) ).replace( "SRC=", "" ) + " ";
+            exLines += tmp.find( x => x.includes( "DPT=" ) ).replace( "DPT=", "" ) + " ";
+            exLines += line.slice( line.indexOf("]") + 2, line.indexOf( " SPY: ") ) + "\n";
+        }
+    }
+
+    if ( !FS.existsSync( "exSpy" ) ) FS.createWriteStream( "exSpy" );
+    FS.appendFileSync( "exSpy", exLines )
+    FS.rmSync( "/var/log/syslog" );
 
 }
 
