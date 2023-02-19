@@ -1013,6 +1013,8 @@ async function spy_agent ( DBs: SQL_lite_3.Database[], user?: string ) {
     answer = answer.filter( x => !x.remark.includes( "Fox X02" ) );
     answer = answer.filter( x => !x.remark.includes( "Fox X02" ) );
     answer = answer.filter( x => !x.remark.includes( "Rasul" ) );
+    answer = answer.filter( x => !x.remark.includes( "Soheila" ) );
+    answer = answer.filter( x => !x.remark.includes( "Hashemi" ) );
 
     console.log( answer.length );
     for ( let x of answer ) {
