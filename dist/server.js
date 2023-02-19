@@ -22,7 +22,8 @@ let dbs_name = [
     'x-ui_1.db',
     'x-ui_2.db',
     'x-ui_3.db',
-    'x-ui_4.db'
+    'x-ui_4.db',
+    'x-ui_5.db'
 ];
 let iDBbs = dbs_name.reduce((x, i) => {
     x.push(Number(i.replace('x-ui_', '').replace('.db', '')));
@@ -229,6 +230,12 @@ function ARGvCommandsController() {
                 yield resetIDs(DBs);
             })
         })
+            .command({ command: 'resetTraffic',
+            describe: 'IDs zurücksetzen',
+            handler: (argv) => __awaiter(this, void 0, void 0, function* () {
+                yield resetTraffic(DBs);
+            })
+        })
             .parse();
     });
 }
@@ -260,9 +267,10 @@ function info(groups) {
         days = 0;
         for (let c of groups[group])
             downloadAmount += c.down;
+        downloadAmount += oldTrafficInserter(group);
         if (groups[group][0].expiry_time) {
             days = (groups[group][0].expiry_time - now) / dayFactor | 0;
-            validFor = days + " Day(s)";
+            validFor = days + "";
         }
         else
             days = null;
@@ -271,20 +279,40 @@ function info(groups) {
         // .. nur Verschönere
         if (validFor.length === 31)
             validFor = " " + validFor;
-        // for ( let entry of groups[ group ] ) {
-        //     if ( !entry.enable ) console.log( group );
-        // }
+        for (let entry of groups[group])
+            if (!entry.enable)
+                console.log(group);
         table.push({
-            Name: group,
+            Name: group.replace("OLD_", ". "),
             CNX: groups[group].length / dbs_name.length,
             usage: downloadAmount,
-            Traffic: (downloadAmount / 1024 / 1024 / 1024).toFixed(1) + " GB",
+            Traffic: (downloadAmount / 1024 / 1024 / 1024).toFixed(1),
             Valid: validFor,
             Days: days,
             active: groups[group][0].enable === 1 ? true : false
         });
     }
     return table;
+}
+// -- =====================================================================================
+function oldTrafficInserter(user) {
+    let myData = {
+        "Rasul X08": 7.4 + 11.4,
+        "Rasul X09": 1.6 + 10.2,
+        "Rasul X10": 6.1 + 25.8,
+        "Sargol": 6.1,
+        "Ehsan": 10.7 + 3.8,
+        "HashemiRad": 6.1 + 1,
+        "Hesam": 7.4 + 1.8,
+        "Hosseyni": 7.3 + 4.3,
+        "Meysam": 4 + .3,
+        "Mohsen": 2.9 + 2.1,
+        "Mojtaba": 4.4 + .3,
+        "Mrs. Soheila": 17.1 + 9.5,
+        "Ramin": 6.9,
+        "Rasul": 3.8
+    };
+    return myData[user] ? myData[user] * 1024 * 1024 * 1024 : 0;
 }
 // -- =====================================================================================
 function grouper(DBs) {
@@ -454,8 +482,8 @@ function myTable(table) {
     // .. reorder tha current Table
     table = table.reduce((x, i) => {
         x.push({
-            "👤": i.Name,
-            "🖥": i.CNX,
+            "": i.Name,
+            // "🖥": i.CNX,
             "∑": i.Traffic,
             [ARGv_1.ARGv.fullRefresh ? "⏱" : "⏲"]: i.Diff,
             "♻": i.Valid
@@ -614,7 +642,7 @@ function connectionStringify(cnx) {
     return myCNX;
 }
 // -- =====================================================================================
-function vlessStringify(cnx, serverName = "ppx.fitored.site") {
+function vlessStringify(cnx, serverName = "pps.fitored.xyz") {
     let myCNX = "vless://";
     try {
         serverName = cnx.stream_settings.tlsSettings.serverName;
@@ -655,7 +683,7 @@ function vlessStringify(cnx, serverName = "ppx.fitored.site") {
     return myCNX + "#" + encodeURIComponent(cnx.remark);
 }
 // -- =====================================================================================
-function vmessStringify(cnx, serverName = "ppx.fitored.site") {
+function vmessStringify(cnx, serverName = "pps.fitored.site") {
     let type = null;
     let path = null;
     let prefix = "vmess://";
