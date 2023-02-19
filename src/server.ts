@@ -1014,11 +1014,10 @@ async function spy_agent ( DBs: SQL_lite_3.Database[], user?: string ) {
     answer = answer.filter( x => !x.remark.includes( "Fox X02" ) );
     answer = answer.filter( x => !x.remark.includes( "Rasul" ) );
 
-    let i = 0;
+    console.log( answer.length );
     for ( let x of answer ) {
         cmd = `sudo iptables -I INPUT -p tcp --dport ${x.port} --syn -j LOG --log-prefix "${x.remark.split( " PPS " )[0]} SPY: "`;
         runShellCmd( cmd );
-        console.log( (i++) );
     }
 
 }
