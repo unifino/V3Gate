@@ -1015,7 +1015,7 @@ async function spy_mission ( DBs: SQL_lite_3.Database[], user?: string ) {
     for ( let x of answer ) {
         cmd = `sudo iptables -I INPUT -p tcp --dport ${x.port} --syn -j LOG --log-prefix "${x.remark.split( " PPS " )[0]} SPY: "`;
         runShellCmd( cmd );
-        await new Promise( _ => setTimeout( _, 7 ) );
+        await new Promise( _ => setTimeout( _, 14 ) );
     }
 
 }
