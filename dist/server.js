@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const shell = require('shelljs');
 const { Console } = require('console');
 const { Transform } = require('stream');
+const FS = require("fs");
 const SQL_lite_3 = require("sqlite3");
 const ARGv_1 = require("./ARGv");
 // -- =====================================================================================
@@ -221,7 +222,13 @@ function ARGvCommandsController() {
             .command({ command: 'spy',
             describe: 'Spion',
             handler: (argv) => __awaiter(this, void 0, void 0, function* () {
-                yield spy_agent(DBs, argv.name);
+                yield spy_mission(DBs, argv.name);
+            })
+        })
+            .command({ command: '007',
+            describe: 'Spion',
+            handler: (argv) => __awaiter(this, void 0, void 0, function* () {
+                spy_agent();
             })
         })
             .command({ command: 'resetIDs',
@@ -828,7 +835,7 @@ function analysis(DBs, user) {
     });
 }
 // -- =====================================================================================
-function spy_agent(DBs, user) {
+function spy_mission(DBs, user) {
     return __awaiter(this, void 0, void 0, function* () {
         let qry = "SELECT * FROM inbounds";
         if (user) {
@@ -837,11 +844,33 @@ function spy_agent(DBs, user) {
         }
         let answer = yield syncQry(DBs[0], qry);
         let cmd;
+        console.log(answer.length);
         for (let x of answer) {
             cmd = `sudo iptables -I INPUT -p tcp --dport ${x.port} --syn -j LOG --log-prefix "${x.remark.split(" PPS ")[0]} SPY: "`;
             runShellCmd(cmd);
         }
     });
+}
+// -- =====================================================================================
+function spy_agent() {
+    const lines = FS.readFileSync("/var/log/syslog", "utf-8").split("\n");
+    let exLines = "";
+    for (let line of lines) {
+        if (line.includes(" SPY: ")) {
+            exLines += line.slice(0, 15) + " ";
+            let tmp = line.split(" ");
+            exLines += tmp.find(x => x.includes("SRC=")).replace("SRC=", "") + " ";
+            exLines += tmp.find(x => x.includes("DPT=")).replace("DPT=", "") + " ";
+            exLines += line.slice(line.indexOf("]") + 2, line.indexOf(" SPY: ")) + "\n";
+        }
+    }
+    if (!FS.existsSync("exSpy")) {
+        FS.createWriteStream("exSpy");
+        console.log("Neue exSpy Datei wird erstellt");
+    }
+    FS.appendFileSync("exSpy", exLines);
+    FS.writeFileSync("/var/log/syslog", "");
+    console.log("Mission erfüllt.");
 }
 // -- =====================================================================================
 function cnxEditor(name, cnxN, cnxID, cmd, exData) {
