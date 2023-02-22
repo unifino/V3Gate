@@ -605,14 +605,17 @@ function reporter ( groups: TS.Users, oldGroups: TS.Users, Spur: TS.Users ) {
 
 function myTable ( table: TS.Table ) {
 
+    let s1 = ((table.reduce( (x,i) => { x += Number(i.Traffic); return x;}, 0 ))|0) + " GB"; 
+    let s2 = (table.reduce( (x,i) => { x += i.DDC; return x;}, 0 )/1024).toFixed(1) + " GB" 
+
     // .. reorder tha current Table
     table = table.reduce( (x,i) => {
         if ( i.Spur > 999 ) i.Spur = ( (i.Spur/1024).toFixed(0) + " MB" ) as any;
         x.push( {
             "": i.Name,
             // "🖥": i.CNX,
-            "∑": i.Traffic + " GB",
-            "D": i.DDC + ( i.DDC ? " MB" : "" ),
+            ["∑: " + s1]: i.Traffic + " GB",
+            ["D: " + s2]: i.DDC + ( i.DDC ? " MB" : "" ),
             [ ARGv.fullRefresh ? "⏱" : "⏲" ]: i.Spur,
             "♻": i.Valid
         } )
