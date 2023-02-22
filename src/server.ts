@@ -26,6 +26,7 @@ let iDBbs = dbs_name.reduce( (x,i) => {
 }, [] );
 
 let DBs: SQL_lite_3.Database[] = [];
+let Schattendaten: TS.Users;
 let downloadCmd = "./Files/Download.sh";
 let uploadCmd = "./Files/Upload.sh";
 
@@ -37,9 +38,10 @@ init();
 
 async function init () {
 
-    await ARGvController();
-
     DBs = await DBs_Loader( dbs_name );
+    Schattendaten = await grouper( DBs );
+
+    await ARGvController();
 
     await ARGvCommandsController();
 
@@ -132,7 +134,7 @@ async function ARGvCommandsController () {
         handler: async argv => {
             let dbs_bak_name = dbs_name.reduce( (x,i) => [ ...x, "BackUP/"+i+".bak" ] ,[] );
             let DBs_bak = await DBs_Loader( dbs_bak_name );
-            let report = reporter( await grouper ( DBs ), await grouper ( DBs_bak ) );
+            let report = reporter( await grouper ( DBs ), await grouper ( DBs_bak ), Schattendaten );
             console.log(report);
         }
     } )
@@ -241,6 +243,13 @@ async function ARGvCommandsController () {
         }
     } )
 
+    .command( { command: 'HQ',
+        describe: 'Hauptquartier',
+        handler: async argv => {
+            HQ( argv.name || "" );
+        }
+    } )
+
     .command( { command: 'resetIDs',
         describe: 'IDs zurücksetzen',
         handler: async argv => {
@@ -309,7 +318,7 @@ function info ( groups: TS.Users ): TS.Table {
         // .. nur Verschönere
         if ( validFor.length === 31 ) validFor = " " + validFor;
 
-        for ( let entry of groups[ group ] ) if ( !entry.enable ) console.log( group );
+        for ( let entry of groups[ group ] ) if ( !entry.enable ) if ( group !== "Hosseyni" ) console.log( group );
 
         table.push( {
             Name: group.replace( "OLD_", ". " ),
@@ -335,17 +344,17 @@ function oldTrafficInserter ( user: string ) {
         "Rasul X08" : 7.4+11.4,
         "Rasul X09" : 1.6+10.2,
         "Rasul X10" : 6.1+25.8,
-        "Sargol" : 6.1,
-        "Ehsan" : 10.7+3.8,
-        "HashemiRad": 6.1+1,
-        "Hesam": 7.4+1.8,
-        "Hosseyni": 7.3+4.3,
-        "Meysam": 4+.3,
-        "Mohsen": 2.9+2.1,
-        "Mojtaba": 4.4+.3,
-        "Mrs. Soheila": 17.1+9.5,
-        "Ramin": 6.9,
-        "Rasul": 3.8
+        // "Sargol" : 6.1,
+        // "Ehsan" : 10.7+3.8,
+        // "HashemiRad": 6.1+1,
+        // "Hesam": 7.4+1.8,
+        // "Hosseyni": 7.3+4.3,
+        // "Meysam": 4+.3,
+        // "Mohsen": 2.9+2.1,
+        // "Mojtaba": 4.4+.3,
+        // "Mrs. Soheila": 17.1+9.5,
+        // "Ramin": 6.9,
+        // "Rasul": 3.8
     }
 
     return myData[ user ] ? myData[ user ] *1024*1024*1024 : 0;
@@ -507,23 +516,49 @@ async function timer ( db: SQL_lite_3.Database, user: string, date: Date ) {
 
 // -- =====================================================================================
 
-function reporter ( groups: TS.Users, oldGroups: TS.Users ) {
+function reporter ( groups: TS.Users, oldGroups: TS.Users, Spur: TS.Users ) {
 
-    let table: TS.Table;
-    let oldTable: TS.Table;
+    let table: TS.Table, oldTable: TS.Table, SpurTabelle: TS.Table;
 
     table = info ( groups );
     oldTable = info ( oldGroups );
+    SpurTabelle = info ( Spur );
 
     // .. Berechnung der Differenz
     for ( let row of table ) {
         try {
-            row.Diff = row.usage - oldTable.find( x => x.Name === row.Name ).usage;
-        }  catch (e) { row.Diff = 0; }
-        row.Diff /= 1024*1024;
-        row.Diff = row.Diff | 0;
-        if ( !row.Diff ) row.Diff = <any>"";
+            row.Spur = row.usage - SpurTabelle.find( x => x.Name === row.Name ).usage;
+        }  catch (e) { row.Spur = 0; }
+        row.Spur /= 1024;
+        row.Spur = row.Spur | 0;
+        if ( !row.Spur ) row.Spur = <any>"";
     }
+
+    for ( let row of table ) {
+        try {
+            row.DDC = row.usage - oldTable.find( x => x.Name === row.Name ).usage;
+        }  catch (e) { row.DDC = 0; }
+        row.DDC /= 1024*1024;
+        row.DDC = row.DDC | 0;
+        if ( !row.DDC ) row.DDC = <any>"";
+    }
+
+    // .. Warnung
+    let u = [ "Rasul X08", "Rasul X09", "Rasul X10" ];
+    let m = 20 +20 +20 +20;
+    for ( let o of u ) {
+        try {
+            m -= Number( table.find( x => x.Name === o ).Traffic )
+        } catch (e) { console.log( `Keine ${o} gefunden!` ); }
+    }
+    console.log( `Rasul X0x: -${m.toFixed(1)}` );
+    m = 0;
+    for ( let i=1; i<9; i++ ) {
+        try {
+            m += Number( table.find( x => x.Name === "HDS X0" + i ).Traffic )
+        } catch (e) { console.log( `Keine HDS X0${i} gefunden!` ); }
+    }
+    console.log( `HDS X0x: +${m.toFixed(1)}` );
 
     // .. report
     switch (ARGv.sort) {
@@ -542,7 +577,8 @@ function reporter ( groups: TS.Users, oldGroups: TS.Users ) {
             break;
 
         case "activity":
-            table = table.sort( (a,b)=> a.Diff > b.Diff ? -1:1 );
+            table = table.sort( (a,b)=> a.DDC > b.DDC ? -1:1 );
+            table = table.sort( (a,b)=> a.Spur > b.Spur ? -1:1 );
             break;
 
         default: 
@@ -555,7 +591,7 @@ function reporter ( groups: TS.Users, oldGroups: TS.Users ) {
     if ( !ARGv.all ) table = table.filter( x => x.usage > 10000 );
     if ( !ARGv.all ) table = table.filter( x => x.Days >= 0 );
     if ( !ARGv.all ) table = table.filter( x => x.active );
-    if ( ARGv.sa && !ARGv.all ) table = table.filter( x => x.Diff );
+    if ( ARGv.sa && !ARGv.all ) table = table.filter( x => x.DDC || x.Spur );
 
     // .. remove usage column
     for ( let row of table ) delete row.usage;
@@ -571,11 +607,13 @@ function myTable ( table: TS.Table ) {
 
     // .. reorder tha current Table
     table = table.reduce( (x,i) => {
+        if ( i.Spur > 999 ) i.Spur = ( (i.Spur/1024).toFixed(0) + " MB" ) as any;
         x.push( {
             "": i.Name,
             // "🖥": i.CNX,
-            "∑": i.Traffic,
-            [ ARGv.fullRefresh ? "⏱" : "⏲" ]: i.Diff,
+            "∑": i.Traffic + " GB",
+            "D": i.DDC + ( i.DDC ? " MB" : "" ),
+            [ ARGv.fullRefresh ? "⏱" : "⏲" ]: i.Spur,
             "♻": i.Valid
         } )
         return x;
@@ -1045,6 +1083,39 @@ function spy_agent () {
     FS.appendFileSync( "exSpy", exLines );
     FS.writeFileSync( "/var/log/syslog", "" );
     console.log( "Mission erfüllt." );
+
+}
+
+// -- =====================================================================================
+
+async function HQ ( ver?: string ) {
+
+    if ( !ver ) {
+        console.log( "touch Report" );
+
+        for ( let v of [ 'vps1', 'vps2', 'vps3', 'vpx1', 'vpx2' ] )
+            console.log( v + ' "cat ~/Documents/V3Gate/exSpy" >> Report' );
+    }
+
+    else {
+
+        let lines = FS.readFileSync( "./Report", "utf-8" ).split( "\n" );
+        let parts: string[];
+        let ips: string[] = [];
+        let user: string;
+
+        for ( let line of lines ) {
+            parts = line.split( " " );
+            user = parts.slice( 5 ).join( " " );
+            if ( ver === user ) {
+                if ( parts[1] === "21" )
+                    ips.push( parts.slice( 3,4 ).join( " " ) )
+            }
+        }
+
+        for( let ip of new Set( ips ) ) console.log( ip );
+
+    }
 
 }
 

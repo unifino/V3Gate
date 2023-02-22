@@ -77,7 +77,8 @@ export type Table = {
     CNX: number,
     usage: number,
     Traffic: string,
-    Diff?: number,
+    Spur?: number,
+    DDC?: number,
     Valid: string,
     Days: number,
     active: boolean

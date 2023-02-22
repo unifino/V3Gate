@@ -31,6 +31,7 @@ let iDBbs = dbs_name.reduce((x, i) => {
     return x;
 }, []);
 let DBs = [];
+let Schattendaten;
 let downloadCmd = "./Files/Download.sh";
 let uploadCmd = "./Files/Upload.sh";
 // -- =====================================================================================
@@ -38,8 +39,9 @@ init();
 // -- =====================================================================================
 function init() {
     return __awaiter(this, void 0, void 0, function* () {
-        yield ARGvController();
         DBs = yield DBs_Loader(dbs_name);
+        Schattendaten = yield grouper(DBs);
+        yield ARGvController();
         yield ARGvCommandsController();
         if ((ARGv_1.ARGv.update || ARGv_1.ARGv.U) && !ARGv_1.ARGv.x)
             runShellCmd(uploadCmd);
@@ -123,7 +125,7 @@ function ARGvCommandsController() {
             handler: (argv) => __awaiter(this, void 0, void 0, function* () {
                 let dbs_bak_name = dbs_name.reduce((x, i) => [...x, "BackUP/" + i + ".bak"], []);
                 let DBs_bak = yield DBs_Loader(dbs_bak_name);
-                let report = reporter(yield grouper(DBs), yield grouper(DBs_bak));
+                let report = reporter(yield grouper(DBs), yield grouper(DBs_bak), Schattendaten);
                 console.log(report);
             })
         })
@@ -231,6 +233,12 @@ function ARGvCommandsController() {
                 spy_agent();
             })
         })
+            .command({ command: 'HQ',
+            describe: 'Hauptquartier',
+            handler: (argv) => __awaiter(this, void 0, void 0, function* () {
+                HQ(argv.name || "");
+            })
+        })
             .command({ command: 'resetIDs',
             describe: 'IDs zurücksetzen',
             handler: (argv) => __awaiter(this, void 0, void 0, function* () {
@@ -288,7 +296,8 @@ function info(groups) {
             validFor = " " + validFor;
         for (let entry of groups[group])
             if (!entry.enable)
-                console.log(group);
+                if (group !== "Hosseyni")
+                    console.log(group);
         table.push({
             Name: group.replace("OLD_", ". "),
             CNX: groups[group].length / dbs_name.length,
@@ -307,17 +316,17 @@ function oldTrafficInserter(user) {
         "Rasul X08": 7.4 + 11.4,
         "Rasul X09": 1.6 + 10.2,
         "Rasul X10": 6.1 + 25.8,
-        "Sargol": 6.1,
-        "Ehsan": 10.7 + 3.8,
-        "HashemiRad": 6.1 + 1,
-        "Hesam": 7.4 + 1.8,
-        "Hosseyni": 7.3 + 4.3,
-        "Meysam": 4 + .3,
-        "Mohsen": 2.9 + 2.1,
-        "Mojtaba": 4.4 + .3,
-        "Mrs. Soheila": 17.1 + 9.5,
-        "Ramin": 6.9,
-        "Rasul": 3.8
+        // "Sargol" : 6.1,
+        // "Ehsan" : 10.7+3.8,
+        // "HashemiRad": 6.1+1,
+        // "Hesam": 7.4+1.8,
+        // "Hosseyni": 7.3+4.3,
+        // "Meysam": 4+.3,
+        // "Mohsen": 2.9+2.1,
+        // "Mojtaba": 4.4+.3,
+        // "Mrs. Soheila": 17.1+9.5,
+        // "Ramin": 6.9,
+        // "Rasul": 3.8
     };
     return myData[user] ? myData[user] * 1024 * 1024 * 1024 : 0;
 }
@@ -432,24 +441,58 @@ function timer(db, user, date) {
     });
 }
 // -- =====================================================================================
-function reporter(groups, oldGroups) {
-    let table;
-    let oldTable;
+function reporter(groups, oldGroups, Spur) {
+    let table, oldTable, SpurTabelle;
     table = info(groups);
     oldTable = info(oldGroups);
+    SpurTabelle = info(Spur);
     // .. Berechnung der Differenz
     for (let row of table) {
         try {
-            row.Diff = row.usage - oldTable.find(x => x.Name === row.Name).usage;
+            row.Spur = row.usage - SpurTabelle.find(x => x.Name === row.Name).usage;
         }
         catch (e) {
-            row.Diff = 0;
+            row.Spur = 0;
         }
-        row.Diff /= 1024 * 1024;
-        row.Diff = row.Diff | 0;
-        if (!row.Diff)
-            row.Diff = "";
+        row.Spur /= 1024;
+        row.Spur = row.Spur | 0;
+        if (!row.Spur)
+            row.Spur = "";
     }
+    for (let row of table) {
+        try {
+            row.DDC = row.usage - oldTable.find(x => x.Name === row.Name).usage;
+        }
+        catch (e) {
+            row.DDC = 0;
+        }
+        row.DDC /= 1024 * 1024;
+        row.DDC = row.DDC | 0;
+        if (!row.DDC)
+            row.DDC = "";
+    }
+    // .. Warnung
+    let u = ["Rasul X08", "Rasul X09", "Rasul X10"];
+    let m = 20 + 20 + 20 + 20;
+    for (let o of u) {
+        try {
+            m -= Number(table.find(x => x.Name === o).Traffic);
+        }
+        catch (e) {
+            console.log(`Keine ${o} gefunden!`);
+        }
+    }
+    console.log(`Rasul X0x: -${m.toFixed(1)}`);
+    m = 0;
+    for (let i = 1; i < 9; i++) {
+        try {
+            m += Number(table.find(x => x.Name === "HDS X0" + i).Traffic);
+        }
+        catch (e) {
+            console.log(`Keine HDS X0${i} gefunden!`);
+        }
+    }
+    console.log(`HDS X0x: +${m.toFixed(1)}`);
     // .. report
     switch (ARGv_1.ARGv.sort) {
         case "usage":
@@ -463,7 +506,8 @@ function reporter(groups, oldGroups) {
             table = table.sort((a, b) => a.Days === null ? -1 : 1);
             break;
         case "activity":
-            table = table.sort((a, b) => a.Diff > b.Diff ? -1 : 1);
+            table = table.sort((a, b) => a.DDC > b.DDC ? -1 : 1);
+            table = table.sort((a, b) => a.Spur > b.Spur ? -1 : 1);
             break;
         default:
             console.log("Sorting is not Activated!");
@@ -477,7 +521,7 @@ function reporter(groups, oldGroups) {
     if (!ARGv_1.ARGv.all)
         table = table.filter(x => x.active);
     if (ARGv_1.ARGv.sa && !ARGv_1.ARGv.all)
-        table = table.filter(x => x.Diff);
+        table = table.filter(x => x.DDC || x.Spur);
     // .. remove usage column
     for (let row of table)
         delete row.usage;
@@ -488,11 +532,14 @@ function reporter(groups, oldGroups) {
 function myTable(table) {
     // .. reorder tha current Table
     table = table.reduce((x, i) => {
+        if (i.Spur > 999)
+            i.Spur = ((i.Spur / 1024).toFixed(0) + " MB");
         x.push({
             "": i.Name,
             // "🖥": i.CNX,
-            "∑": i.Traffic,
-            [ARGv_1.ARGv.fullRefresh ? "⏱" : "⏲"]: i.Diff,
+            "∑": i.Traffic + " GB",
+            "D": i.DDC + (i.DDC ? " MB" : ""),
+            [ARGv_1.ARGv.fullRefresh ? "⏱" : "⏲"]: i.Spur,
             "♻": i.Valid
         });
         return x;
@@ -848,6 +895,7 @@ function spy_mission(DBs, user) {
         for (let x of answer) {
             cmd = `sudo iptables -I INPUT -p tcp --dport ${x.port} --syn -j LOG --log-prefix "${x.remark.split(" PPS ")[0]} SPY: "`;
             runShellCmd(cmd);
+            yield new Promise(_ => setTimeout(_, 14));
         }
     });
 }
@@ -871,6 +919,32 @@ function spy_agent() {
     FS.appendFileSync("exSpy", exLines);
     FS.writeFileSync("/var/log/syslog", "");
     console.log("Mission erfüllt.");
+}
+// -- =====================================================================================
+function HQ(ver) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (!ver) {
+            console.log("touch Report");
+            for (let v of ['vps1', 'vps2', 'vps3', 'vpx1', 'vpx2'])
+                console.log(v + ' "cat ~/Documents/V3Gate/exSpy" >> Report');
+        }
+        else {
+            let lines = FS.readFileSync("./Report", "utf-8").split("\n");
+            let parts;
+            let ips = [];
+            let user;
+            for (let line of lines) {
+                parts = line.split(" ");
+                user = parts.slice(5).join(" ");
+                if (ver === user) {
+                    if (parts[1] === "21")
+                        ips.push(parts.slice(3, 4).join(" "));
+                }
+            }
+            for (let ip of new Set(ips))
+                console.log(ip);
+        }
+    });
 }
 // -- =====================================================================================
 function cnxEditor(name, cnxN, cnxID, cmd, exData) {
