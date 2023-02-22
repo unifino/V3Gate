@@ -551,7 +551,7 @@ function reporter ( groups: TS.Users, oldGroups: TS.Users, Spur: TS.Users ) {
             m -= Number( table.find( x => x.Name === o ).Traffic )
         } catch (e) { console.log( `Keine ${o} gefunden!` ); }
     }
-    console.log( `Rasul X0x: -${m.toFixed(1)}` );
+    console.log( `Rasul X0x: ${m.toFixed(1)}` );
     m = 0;
     for ( let i=1; i<9; i++ ) {
         try {
