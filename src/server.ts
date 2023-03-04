@@ -47,6 +47,10 @@ async function init () {
 
     if ( ( ARGv.update || ARGv.U ) && !ARGv.x ) runShellCmd( uploadCmd );
 
+    await new Promise( _ => setTimeout( _, 500 ) );
+
+    for ( let d of [...new Set( dux )] ) console.log( d );
+
 }
 
 // -- =====================================================================================
@@ -290,6 +294,7 @@ async function userCheck ( db: SQL_lite_3.Database, user: string ) {
 
 // -- =====================================================================================
 
+let dux: string[] = [];
 function info ( groups: TS.Users ): TS.Table {
 
     let table: TS.Table = [];
@@ -318,7 +323,7 @@ function info ( groups: TS.Users ): TS.Table {
         // .. nur Verschönere
         if ( validFor.length === 31 ) validFor = " " + validFor;
 
-        for ( let entry of groups[ group ] ) if ( !entry.enable ) if ( group !== "Hosseyni" ) console.log( group );
+        for ( let entry of groups[ group ] ) if ( !entry.enable ) dux.push( group )
 
         table.push( {
             Name: group.replace( "OLD_", ". " ),

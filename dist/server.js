@@ -45,6 +45,9 @@ function init() {
         yield ARGvCommandsController();
         if ((ARGv_1.ARGv.update || ARGv_1.ARGv.U) && !ARGv_1.ARGv.x)
             runShellCmd(uploadCmd);
+        yield new Promise(_ => setTimeout(_, 500));
+        for (let d of [...new Set(dux)])
+            console.log(d);
     });
 }
 // -- =====================================================================================
@@ -271,6 +274,7 @@ function userCheck(db, user) {
     });
 }
 // -- =====================================================================================
+let dux = [];
 function info(groups) {
     let table = [];
     let downloadAmount;
@@ -296,8 +300,7 @@ function info(groups) {
             validFor = " " + validFor;
         for (let entry of groups[group])
             if (!entry.enable)
-                if (group !== "Hosseyni")
-                    console.log(group);
+                dux.push(group);
         table.push({
             Name: group.replace("OLD_", ". "),
             CNX: groups[group].length / dbs_name.length,
@@ -473,10 +476,10 @@ function reporter(groups, oldGroups, Spur) {
     }
     // .. Warnung
     let u = ["Rasul X08", "Rasul X09", "Rasul X10"];
-    let m = 20 + 20 + 20 + 20;
+    let m = -20 - 20 - 20 - 20;
     for (let o of u) {
         try {
-            m -= Number(table.find(x => x.Name === o).Traffic);
+            m += Number(table.find(x => x.Name === o).Traffic);
         }
         catch (e) {
             console.log(`Keine ${o} gefunden!`);
@@ -531,7 +534,7 @@ function reporter(groups, oldGroups, Spur) {
 // -- =====================================================================================
 function myTable(table) {
     let s1 = ((table.reduce((x, i) => { x += Number(i.Traffic); return x; }, 0)) | 0) + " GB";
-    let s2 = (table.reduce((x, i) => { x += i.DDC; return x; }, 0) / 1024).toFixed(1) + " GB";
+    let s2 = ((table.reduce((x, i) => { x += i.DDC; return x; }, 0) / 1024) | 0) + " GB";
     // .. reorder tha current Table
     table = table.reduce((x, i) => {
         if (i.Spur > 999)

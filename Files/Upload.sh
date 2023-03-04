@@ -14,7 +14,7 @@ sshpass -p "'" scp -P 7333 ./db/x-ui_3.db unifino@$v3:/etc/x-ui/x-ui.db &&
 echo "VPS3 ... Done!" &
 sshpass -p "'" scp -P 7333 ./db/x-ui_4.db unifino@$x1:/etc/x-ui/x-ui.db &&
 echo "VPX1 ... Done!" &
-sshpass -p "'" scp -P 7333 ./db/x-ui_4.db unifino@$x2:/etc/x-ui/x-ui.db &&
+sshpass -p "'" scp -P 7333 ./db/x-ui_5.db unifino@$x2:/etc/x-ui/x-ui.db &&
 echo "VPX2 ... Done!"
 
 wait

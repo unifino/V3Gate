@@ -1,0 +1,33 @@
+v3gate spy --name="Ehsan" && v3gate spy --name="Mrs. Soheila" && v3gate spy --name="OLD_Mrs. Soheila" && v3gate spy --name="Ramin" && v3gate spy --name="Rasul" && v3gate spy --name="Sargol" && v3gate spy --name="Yasmin"
+
+vps1 sudo -S chmod -R 777 /var/log/ && vps2 sudo -S chmod -R 777 /var/log/ && vps3 sudo -S chmod -R 777 /var/log/ && vpx1 sudo -S chmod -R 777 /var/log/ && vpx2 sudo -S chmod -R 777 /var/log/
+
+sudo sudo -S chmod -R 777 /var/log/ && v3gate && git stash && git pull && npm run build && v3gate spy && v3gate 007
+
+
+v3gate -f && v3gate resetIDs && v3gate -U
+
+
+name="HDS X01" && vps1 ./spy.sh $name && echo "" && vps2 ./spy.sh $name && echo "" && vps3 ./spy.sh $name && echo "" && vpx1 ./spy.sh $name && vpx2 ./spy.sh $name
+
+
+vps5 "cd ~/Documents/V3Gate/ && git stash && git pull && npm run build"
+vpx1 "cd ~/Documents/V3Gate/ && git stash && git pull && npm run build"
+
+
+
+vps1 "cd ~/Documents/V3Gate/ && npm run start 007"
+vps3 "cd ~/Documents/V3Gate/ && npm run start 007"
+vpx2 "cd ~/Documents/V3Gate/ && npm run start 007"
+
+sudo -S chmod -R 777 /var/log/ 
+vpx1 "cd ~/Documents/V3Gate/ && npm run start 007"
+vps2 "cd ~/Documents/V3Gate/ && npm run start 007"
+
+
+touch Report
+vps1 "cat ~/Documents/V3Gate/exSpy" >> Report
+vps2 "cat ~/Documents/V3Gate/exSpy" >> Report
+vps3 "cat ~/Documents/V3Gate/exSpy" >> Report
+vpx1 "cat ~/Documents/V3Gate/exSpy" >> Report
+vpx2 "cat ~/Documents/V3Gate/exSpy" >> Report
