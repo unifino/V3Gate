@@ -476,7 +476,7 @@ function reporter(groups, oldGroups, Spur) {
     }
     // .. Warnung
     let u = ["Rasul X08", "Rasul X09", "Rasul X10"];
-    let m = -20 - 20 - 20 - 20;
+    let m = -20 - 20 - 20 - 20 - 45 - 120;
     for (let o of u) {
         try {
             m += Number(table.find(x => x.Name === o).Traffic);

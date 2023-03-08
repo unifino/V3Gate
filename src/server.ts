@@ -49,7 +49,7 @@ async function init () {
 
     await new Promise( _ => setTimeout( _, 500 ) );
 
-    for ( let d of [...new Set( dux )] ) console.log( d );
+    for ( let d of [...new Set( dux )] ) console.log( d  );
 
 }
 
@@ -550,7 +550,7 @@ function reporter ( groups: TS.Users, oldGroups: TS.Users, Spur: TS.Users ) {
 
     // .. Warnung
     let u = [ "Rasul X08", "Rasul X09", "Rasul X10" ];
-    let m = -20 -20 -20 -20;
+    let m = -20 -20 -20 -20 -45 -120;
     for ( let o of u ) {
         try {
             m += Number( table.find( x => x.Name === o ).Traffic )
