@@ -4,7 +4,7 @@ echo ""
 . ~/Documents/V3Gate/Files/VPSIPs.sh
 
 # .. redirectcd 
-cd ./db
+cd ./DBs
 
 # .. backup
 if [[ $1 == "y" ]]
@@ -24,15 +24,15 @@ fi
 # rm -rf *.db
 
 # .. download DB files
-    sshpass -p "'" scp -P 7333 -o StrictHostKeyChecking=no unifino@$v1:/etc/x-ui/x-ui.db ../db/x-ui_1.db &&
+    sshpass -p "'" scp -P 7333 -o StrictHostKeyChecking=no unifino@$v1:/etc/x-ui/x-ui.db ../DBs/x-ui_1.db &&
     echo "VPS1 ... Done!" &
-    sshpass -p "'" scp -P 7333 -o StrictHostKeyChecking=no unifino@$v2:/etc/x-ui/x-ui.db ../db/x-ui_2.db &&
+    sshpass -p "'" scp -P 7333 -o StrictHostKeyChecking=no unifino@$v2:/etc/x-ui/x-ui.db ../DBs/x-ui_2.db &&
     echo "VPS2 ... Done!" &
-    sshpass -p "'" scp -P 7333 -o StrictHostKeyChecking=no unifino@$v3:/etc/x-ui/x-ui.db ../db/x-ui_3.db &&
+    sshpass -p "'" scp -P 7333 -o StrictHostKeyChecking=no unifino@$v3:/etc/x-ui/x-ui.db ../DBs/x-ui_3.db &&
     echo "VPS3 ... Done!" &
-    sshpass -p "'" scp -P 7333 -o StrictHostKeyChecking=no unifino@$x1:/etc/x-ui/x-ui.db ../db/x-ui_4.db &&
+    sshpass -p "'" scp -P 7333 -o StrictHostKeyChecking=no unifino@$x1:/etc/x-ui/x-ui.db ../DBs/x-ui_4.db &&
     echo "VPX1 ... Done!" &
-    sshpass -p "'" scp -P 7333 -o StrictHostKeyChecking=no unifino@$x2:/etc/x-ui/x-ui.db ../db/x-ui_5.db &&
+    sshpass -p "'" scp -P 7333 -o StrictHostKeyChecking=no unifino@$x2:/etc/x-ui/x-ui.db ../DBs/x-ui_5.db &&
     echo "VPX2 ... Done!"
 
 # .. wait until all dbs be downloaded

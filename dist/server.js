@@ -57,7 +57,7 @@ function DBs_Loader(dbs_name) {
         let db_address;
         let myDBs = [];
         for (let db_name of dbs_name) {
-            db_address = `./db/${db_name}`;
+            db_address = `./DBs/${db_name}`;
             db_tmp = yield new SQL_lite_3.Database(db_address, SQL_lite_3.OPEN_READWRITE);
             myDBs.push(db_tmp);
         }
@@ -97,9 +97,9 @@ function ARGvCommandsController() {
                 // let groups = await grouper ( DBs_OLD );
                 // for( let c of groups["OLD_Neda"] ) {
                 // console.log(c.id);
-                // let db_demo = await new SQL_lite_3.Database( "./db/BackUP/OLD/OLD_1.db", SQL_lite_3.OPEN_READWRITE );
+                // let db_demo = await new SQL_lite_3.Database( "./DBs/BackUP/OLD/OLD_1.db", SQL_lite_3.OPEN_READWRITE );
                 // for ( let i of iDBbs ) {
-                //     let qry = "ATTACH DATABASE 'file:./../db/x-ui_" + i + ".db' AS db" + i;
+                //     let qry = "ATTACH DATABASE 'file:./../DBs/x-ui_" + i + ".db' AS db" + i;
                 //     await syncQry( db_demo, qry );
                 //     qry = `INSERT INTO db${i}.inbounds SELECT * FROM inbounds WHERE id=43`
                 //     await syncQry( db_demo, qry );
@@ -568,7 +568,7 @@ function myTable(table) {
 // -- =====================================================================================
 function newTempUser() {
     return __awaiter(this, void 0, void 0, function* () {
-        let db_demo = yield new SQL_lite_3.Database("./db/BackUP/TMO.db.demo", SQL_lite_3.OPEN_READWRITE);
+        let db_demo = yield new SQL_lite_3.Database("./DBs/BackUP/TMO.db.demo", SQL_lite_3.OPEN_READWRITE);
         let qry;
         let CNX;
         let aPort;
@@ -593,7 +593,7 @@ function newTempUser() {
         }
         // .. BDs anhängen und Hinzufügen von Benutzern
         for (let i of iDBbs) {
-            qry = "ATTACH DATABASE 'file:./../db/x-ui_" + i + ".db' AS db" + i;
+            qry = "ATTACH DATABASE 'file:./../DBs/x-ui_" + i + ".db' AS db" + i;
             yield syncQry(db_demo, qry);
             qry = `INSERT INTO db${i}.inbounds SELECT * FROM inbounds WHERE id<=${(lastID + 19)}`;
             yield syncQry(db_demo, qry);
