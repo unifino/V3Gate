@@ -90,27 +90,6 @@ function ARGvCommandsController() {
     return __awaiter(this, void 0, void 0, function* () {
         const ARGvs = require('yargs');
         ARGvs
-            .command({ command: 'tempox',
-            handler: (argv) => __awaiter(this, void 0, void 0, function* () {
-                // let dbs_old_name = [1].reduce( (x,i) => [ ...x, "BackUP/OLD/OLD_"+i+".db" ] ,[] );
-                // let DBs_OLD = await DBs_Loader( dbs_old_name );
-                // let groups = await grouper ( DBs_OLD );
-                // for( let c of groups["OLD_Neda"] ) {
-                // console.log(c.id);
-                // let db_demo = await new SQL_lite_3.Database( "./DBs/BackUP/OLD/OLD_1.db", SQL_lite_3.OPEN_READWRITE );
-                // for ( let i of iDBbs ) {
-                //     let qry = "ATTACH DATABASE 'file:./../DBs/x-ui_" + i + ".db' AS db" + i;
-                //     await syncQry( db_demo, qry );
-                //     qry = `INSERT INTO db${i}.inbounds SELECT * FROM inbounds WHERE id=43`
-                //     await syncQry( db_demo, qry );
-                //     qry = `INSERT INTO db${i}.inbounds SELECT * FROM inbounds WHERE id=44`
-                //     await syncQry( db_demo, qry );
-                //     qry = `INSERT INTO db${i}.inbounds SELECT * FROM inbounds WHERE id=45`
-                //     await syncQry( db_demo, qry );
-                // }
-                // }
-            })
-        })
             .command({ command: 'userEdit',
             handler: (argv) => __awaiter(this, void 0, void 0, function* () {
                 console.clear();
@@ -391,6 +370,11 @@ function userTimer(DBs, user, days) {
             yield timer(db, user, lastTime);
         console.log(`Die Benutzer: ${user} ist bis ${lastTime} verfügbar`);
     });
+}
+// -- =====================================================================================
+function IranTimeZone(date, zone = "Asia/Tehran") {
+    date = typeof date === "string" ? new Date(date) : date;
+    return new Date(date).toLocaleString("en-US", { timeZone: zone });
 }
 // -- =====================================================================================
 function rename(db, oldName, newName) {
