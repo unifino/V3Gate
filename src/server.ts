@@ -600,7 +600,8 @@ function reporter ( groups: TS.Users, oldGroups: TS.Users, Spur: TS.Users ) {
 function myTable ( table: TS.Table ) {
 
     let s1 = ((table.reduce( (x,i) => { x += Number(i.Traffic); return x;}, 0 ))|0) + " GB"; 
-    let s2 = ((table.reduce( (x,i) => { x += i.DDC; return x;}, 0 )/1024)|0) + " GB" 
+    let sx = table.reduce( (x,i) => { x += i.DDC; return x;}, 0 );
+    let s2 = ( sx > 1024 ? sx /1024 | 0 : 0 ) + " GB";
 
     // .. reorder tha current Table
     table = table.reduce( (x,i) => {
