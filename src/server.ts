@@ -335,7 +335,7 @@ function oldTrafficInserter ( user: string ) {
         // "Yasmin" : 2.2,
         "Sargol" : 13.8,
         "Miramin": 7.4,
-        "ASH": 90.4,
+        "ASH": 90.4+18,
         "Mahsa": .7,
         "Mohaddese": 1.5-1.5,
         "Ali": 9.1,
