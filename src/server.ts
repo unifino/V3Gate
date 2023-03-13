@@ -327,19 +327,18 @@ function oldTrafficInserter ( user: string ) {
         // "Rasul X08" : 7.4+11.4,
         // "Rasul X09" : 1.6+10.2,
         // "Rasul X10" : 6.1+25.8,
-        "Rasul X08" : 43.4,
-        "Rasul X09" : 50.8,
-        "Rasul X10" : 67.8,
-        "Rasul" : 11.7,
-        "Ramin" : 19.7,
+        "Rasul X08" : 51.5,
+        "Rasul X09" : 62.5,
+        "Rasul X10" : 81.6,
+        "Ramin" : 24.4,
         // "Yasmin" : 2.2,
-        "Sargol" : 13.8,
-        "Miramin": 7.4,
-        "ASH": 90.4+18,
-        "Mahsa": .7,
-        "Mohaddese": 1.5-1.5,
-        "Ali": 9.1,
-        "Farhad": .6+1.5,
+        "Sargol" : 15.6,
+        "Miramin": 8.1,
+        "ASH": 109.4,
+        "Mahsa": 1.7,
+        "Mohaddese": .6,
+        "Ali": 14.3,
+        "Farhad": 2.5,
     }
 
     return myData[ user ] ? myData[ user ] *1024*1024*1024 : 0;
@@ -546,13 +545,6 @@ function reporter ( groups: TS.Users, oldGroups: TS.Users, Spur: TS.Users ) {
         } catch (e) { console.log( `Keine ${o} gefunden!` ); }
     }
     console.log( `Rasul X0x: ${m.toFixed(1)}` );
-    m = 0;
-    for ( let i=1; i<9; i++ ) {
-        try {
-            m += Number( table.find( x => x.Name === "HDS X0" + i ).Traffic )
-        } catch (e) { console.log( `Keine HDS X0${i} gefunden!` ); }
-    }
-    console.log( `HDS X0x: +${m.toFixed(1)}` );
 
     // .. report
     switch (ARGv.sort) {

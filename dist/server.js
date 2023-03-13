@@ -295,20 +295,21 @@ function info(groups) {
 // -- =====================================================================================
 function oldTrafficInserter(user) {
     let myData = {
-        "Rasul X08": 7.4 + 11.4,
-        "Rasul X09": 1.6 + 10.2,
-        "Rasul X10": 6.1 + 25.8,
-        // "Sargol" : 6.1,
-        // "Ehsan" : 10.7+3.8,
-        // "HashemiRad": 6.1+1,
-        // "Hesam": 7.4+1.8,
-        // "Hosseyni": 7.3+4.3,
-        // "Meysam": 4+.3,
-        // "Mohsen": 2.9+2.1,
-        // "Mojtaba": 4.4+.3,
-        // "Mrs. Soheila": 17.1+9.5,
-        // "Ramin": 6.9,
-        // "Rasul": 3.8
+        // "Rasul X08" : 7.4+11.4,
+        // "Rasul X09" : 1.6+10.2,
+        // "Rasul X10" : 6.1+25.8,
+        "Rasul X08": 51.5,
+        "Rasul X09": 62.5,
+        "Rasul X10": 81.6,
+        "Ramin": 24.4,
+        // "Yasmin" : 2.2,
+        "Sargol": 15.6,
+        "Miramin": 8.1,
+        "ASH": 109.4,
+        "Mahsa": 1.7,
+        "Mohaddese": .6,
+        "Ali": 14.3,
+        "Farhad": 2.5,
     };
     return myData[user] ? myData[user] * 1024 * 1024 * 1024 : 0;
 }
@@ -470,16 +471,6 @@ function reporter(groups, oldGroups, Spur) {
         }
     }
     console.log(`Rasul X0x: ${m.toFixed(1)}`);
-    m = 0;
-    for (let i = 1; i < 9; i++) {
-        try {
-            m += Number(table.find(x => x.Name === "HDS X0" + i).Traffic);
-        }
-        catch (e) {
-            console.log(`Keine HDS X0${i} gefunden!`);
-        }
-    }
-    console.log(`HDS X0x: +${m.toFixed(1)}`);
     // .. report
     switch (ARGv_1.ARGv.sort) {
         case "usage":
@@ -518,7 +509,8 @@ function reporter(groups, oldGroups, Spur) {
 // -- =====================================================================================
 function myTable(table) {
     let s1 = ((table.reduce((x, i) => { x += Number(i.Traffic); return x; }, 0)) | 0) + " GB";
-    let s2 = ((table.reduce((x, i) => { x += i.DDC; return x; }, 0) / 1024) | 0) + " GB";
+    let sx = table.reduce((x, i) => { x += i.DDC; return x; }, 0);
+    let s2 = (sx > 1024 ? sx / 1024 | 0 : 0) + " GB";
     // .. reorder tha current Table
     table = table.reduce((x, i) => {
         if (i.Spur > 999)
