@@ -512,7 +512,7 @@ function myTable(table) {
     let s2 = (sx > 1024 ? sx / 1024 | 0 : 0) + " GB";
     // .. reorder tha current Table
     table = table.reduce((x, i) => {
-        if (i.Spur > 999)
+        if (i.Spur > 1024)
             i.Spur = ((i.Spur / 1024).toFixed(0) + " MB");
         x.push({
             "": i.Name,
@@ -528,7 +528,8 @@ function myTable(table) {
     let r;
     const ts = new Transform({ transform(chunk, enc, cb) { cb(null, chunk); } });
     const logger = new Console({ stdout: ts });
-    logger.table(table);
+    console.log(table);
+    logger.table(table.filter(x => !x[""].includes("HDS X")));
     const tableString = (ts.read() || '').toString();
     for (let row of tableString.split(/[\r\n]+/)) {
         r = row.replace(/[^┬]*┬/, '┌');

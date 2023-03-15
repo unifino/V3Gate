@@ -614,7 +614,9 @@ function myTable ( table: TS.Table ) {
     const ts = new Transform( { transform(chunk, enc, cb) { cb(null, chunk) } } );
     const logger = new Console( { stdout: ts } );
 
-    logger.table( table.filter( x => !x.Name.includes( "HDS X" ) ) );
+    console.log(table);
+    
+    logger.table( table.filter( x => !x[""].includes( "HDS X" ) ) );
 
     const tableString = ( ts.read() || '' ).toString();
 
