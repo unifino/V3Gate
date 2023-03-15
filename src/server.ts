@@ -596,7 +596,7 @@ function myTable ( table: TS.Table ) {
 
     // .. reorder tha current Table
     table = table.reduce( (x,i) => {
-        if ( i.Spur > 999 ) i.Spur = ( (i.Spur/1024).toFixed(0) + " MB" ) as any;
+        if ( i.Spur > 1024 ) i.Spur = ( (i.Spur/1024).toFixed(0) + " MB" ) as any;
         x.push( {
             "": i.Name,
             // "🖥": i.CNX,
@@ -614,7 +614,7 @@ function myTable ( table: TS.Table ) {
     const ts = new Transform( { transform(chunk, enc, cb) { cb(null, chunk) } } );
     const logger = new Console( { stdout: ts } );
 
-    logger.table(table);
+    logger.table( table.filter( x => !x.Name.includes( "HDS X" ) ) );
 
     const tableString = ( ts.read() || '' ).toString();
 
