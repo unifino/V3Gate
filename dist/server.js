@@ -295,20 +295,13 @@ function info(groups) {
 // -- =====================================================================================
 function oldTrafficInserter(user) {
     let myData = {
-        // "Rasul X08" : 7.4+11.4,
-        // "Rasul X09" : 1.6+10.2,
-        // "Rasul X10" : 6.1+25.8,
-        "Rasul X08": 51.5,
-        "Rasul X09": 62.5,
-        "Rasul X10": 81.6,
-        "Ramin": 24.4 - 28.3,
-        "Sargol": 15.6,
-        "Miramin": 8.1,
-        "ASH": 109.4,
-        "Mahsa": 1.7,
-        "Mohaddese": .6,
-        "Ali": 14.3,
-        "Farhad": 2.5,
+        "Rasul X08": 10.3,
+        "Rasul X09": 19.1,
+        "Rasul X10": 42.3,
+        "Ramin": 1.7,
+        "ASH": 13.2,
+        "Ali": 20.6,
+        "RSL X01": 3.4,
     };
     return myData[user] ? myData[user] * 1024 * 1024 * 1024 : 0;
 }
@@ -460,7 +453,7 @@ function reporter(groups, oldGroups, Spur) {
     }
     // .. Warnung
     let u = ["Rasul X08", "Rasul X09", "Rasul X10"];
-    let m = -20 - 20 - 20 - 20 - 45 - 120;
+    let m = -20 - 20 - 20 - 20 - 45 - 120 + 150;
     for (let o of u) {
         try {
             m += Number(table.find(x => x.Name === o).Traffic);
@@ -528,7 +521,6 @@ function myTable(table) {
     let r;
     const ts = new Transform({ transform(chunk, enc, cb) { cb(null, chunk); } });
     const logger = new Console({ stdout: ts });
-    console.log(table);
     logger.table(table.filter(x => !x[""].includes("HDS X")));
     const tableString = (ts.read() || '').toString();
     for (let row of tableString.split(/[\r\n]+/)) {
