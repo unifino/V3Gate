@@ -46,8 +46,8 @@ apt install curl socat sshpass -y \
 && ~/.acme.sh/acme.sh --set-default-ca --server letsencrypt \
 && ~/.acme.sh/acme.sh --register-account -m unifino@protonmail.com \
 
-~/.acme.sh/acme.sh --issue -d  pps.fitored.xyz --standalone
-~/.acme.sh/acme.sh --installcert -d pps.fitored.xyz --key-file /root/pps.fitored.xyz.key --fullchain-file /root/pps.fitored.xyz.crt
+# ~/.acme.sh/acme.sh --issue -d  pps.fitored.xyz --standalone
+# ~/.acme.sh/acme.sh --installcert -d pps.fitored.xyz --key-file /root/pps.fitored.xyz.key --fullchain-file /root/pps.fitored.xyz.crt
 
-~/.acme.sh/acme.sh --issue -d  pps.fitored.site --standalone
-~/.acme.sh/acme.sh --installcert -d pps.fitored.site --key-file /root/pps.fitored.site.key --fullchain-file /root/pps.fitored.site.crt
+# ~/.acme.sh/acme.sh --issue -d  pps.fitored.site --standalone
+# ~/.acme.sh/acme.sh --installcert -d pps.fitored.site --key-file /root/pps.fitored.site.key --fullchain-file /root/pps.fitored.site.crt
