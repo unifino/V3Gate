@@ -324,13 +324,13 @@ function info ( groups: TS.Users ): TS.Table {
 function oldTrafficInserter ( user: string ) {
 
     let myData = {
-        "Rasul X08" : 10.3,
-        "Rasul X09" : 19.1,
-        "Rasul X10" : 42.3,
-        "Ramin" : 1.7,
-        "ASH": 13.2,
-        "Ali": 20.6,
-        "RSL X01": 3.4,
+        // "Rasul X08" : 10.3,
+        // "Rasul X09" : 19.1,
+        // "Rasul X10" : 42.3,
+        // "Ramin" : 1.7,
+        // "ASH": 13.2,
+        // "Ali": 20.6,
+        // "RSL X01": 3.4,
     }
 
     return myData[ user ] ? myData[ user ] *1024*1024*1024 : 0;
