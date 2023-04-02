@@ -529,14 +529,14 @@ function reporter ( groups: TS.Users, oldGroups: TS.Users, Spur: TS.Users ) {
     }
 
     // .. Warnung
-    let u = [ "Rasul X08", "Rasul X09", "Rasul X10" ];
-    let m = -20 -20 -20 -20 -45 -120 + 150;
-    for ( let o of u ) {
-        try {
-            m += Number( table.find( x => x.Name === o ).Traffic )
-        } catch (e) { console.log( `Keine ${o} gefunden!` ); }
-    }
-    console.log( `Rasul X0x: ${m.toFixed(1)}` );
+    // let u = [ "Rasul X08", "Rasul X09", "Rasul X10" ];
+    // let m = 20;
+    // for ( let o of u ) {
+    //     try {
+    //         m += Number( table.find( x => x.Name === o ).Traffic )
+    //     } catch (e) { console.log( `Keine ${o} gefunden!` ); }
+    // }
+    // console.log( `Rasul X0x: ${m.toFixed(1)}` );
 
     // .. report
     switch (ARGv.sort) {
