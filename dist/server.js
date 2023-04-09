@@ -295,13 +295,13 @@ function info(groups) {
 // -- =====================================================================================
 function oldTrafficInserter(user) {
     let myData = {
-        "Rasul X08": 10.3,
-        "Rasul X09": 19.1,
-        "Rasul X10": 42.3,
-        "Ramin": 1.7,
-        "ASH": 13.2,
-        "Ali": 20.6,
-        "RSL X01": 3.4,
+    // "Rasul X08" : 10.3,
+    // "Rasul X09" : 19.1,
+    // "Rasul X10" : 42.3,
+    // "Ramin" : 1.7,
+    // "ASH": 13.2,
+    // "Ali": 20.6,
+    // "RSL X01": 3.4,
     };
     return myData[user] ? myData[user] * 1024 * 1024 * 1024 : 0;
 }
@@ -452,17 +452,14 @@ function reporter(groups, oldGroups, Spur) {
             row.DDC = "";
     }
     // .. Warnung
-    let u = ["Rasul X08", "Rasul X09", "Rasul X10"];
-    let m = -20 - 20 - 20 - 20 - 45 - 120 + 150;
-    for (let o of u) {
-        try {
-            m += Number(table.find(x => x.Name === o).Traffic);
-        }
-        catch (e) {
-            console.log(`Keine ${o} gefunden!`);
-        }
-    }
-    console.log(`Rasul X0x: ${m.toFixed(1)}`);
+    // let u = [ "Rasul X08", "Rasul X09", "Rasul X10" ];
+    // let m = 20;
+    // for ( let o of u ) {
+    //     try {
+    //         m += Number( table.find( x => x.Name === o ).Traffic )
+    //     } catch (e) { console.log( `Keine ${o} gefunden!` ); }
+    // }
+    // console.log( `Rasul X0x: ${m.toFixed(1)}` );
     // .. report
     switch (ARGv_1.ARGv.sort) {
         case "usage":
