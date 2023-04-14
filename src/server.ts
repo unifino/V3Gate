@@ -62,10 +62,21 @@ async function DBs_Loader ( dbs_name: string[] ): Promise<SQL_lite_3.Database[]>
     let myDBs: SQL_lite_3.Database[] = [];
 
     for ( let db_name of dbs_name ) {
+
+        db_tmp = null;
         db_address = `./DBs/${db_name}`;
-        db_tmp = await new SQL_lite_3.Database( db_address, SQL_lite_3.OPEN_READWRITE );
-        myDBs.push ( db_tmp );
+        db_tmp = new SQL_lite_3.Database( db_address, SQL_lite_3.OPEN_READWRITE, (e) => {
+            if (e) console.log( `BAD: ${db_name}` );
+        } );
+
+        if ( db_tmp ) myDBs.push ( db_tmp );
+
+        await new Promise( _ => setTimeout( _, 100 ) );
+
     }
+
+    if ( myDBs.length !== dbs_name.length ) 
+        console.log( "ERR: HELP ME!", myDBs.length, dbs_name.length );
 
     return myDBs;
 
