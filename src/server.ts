@@ -14,7 +14,7 @@ let now = new Date().getTime();
 let hourFactor = 60*1000*60;
 let dayFactor = hourFactor*24;
 let dbs_name = [
-    'x-ui_1.db',
+    // 'x-ui_1.db',
     'x-ui_2.db',
     'x-ui_3.db',
     'x-ui_4.db',
