@@ -331,6 +331,9 @@ function groupName(db, container) {
         // .. loop over results
         for (let i = 0; i < rows.length; i++) {
             tmpName = rows[i].remark.split('PPS')[0].trim();
+            let RSX = ["Rasul X08", "Rasul X09", "Rasul X10"];
+            if (RSX.includes(tmpName))
+                tmpName = "RSX";
             // .. create new user
             if (!container[tmpName])
                 container[tmpName] = [];
