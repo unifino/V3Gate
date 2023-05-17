@@ -374,7 +374,7 @@ async function groupName ( db: SQL_lite_3.Database, container: TS.Users ): Promi
 
         tmpName = rows[i].remark.split( 'PPS' )[0].trim();
 
-        let RSX = [ "Rasul X08", "Rasul X09", "Rasul X10" ];
+        let RSX = [ "Rasul X08", "Rasul X09", "Rasul X10", "Hatef" ];
         if ( RSX.includes( tmpName ) ) tmpName = "RSX";
 
         // .. create new user
