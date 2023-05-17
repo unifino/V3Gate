@@ -334,13 +334,7 @@ function info ( groups: TS.Users ): TS.Table {
 function oldTrafficInserter ( user: string ) {
 
     let myData = {
-        // "Rasul X08" : 10.3,
-        // "Rasul X09" : 19.1,
-        // "Rasul X10" : 42.3,
-        // "Ramin" : 1.7,
-        // "ASH": 13.2,
-        // "Ali": 20.6,
-        // "RSL X01": 3.4,
+        "RSX" : -.8 + 36.3,
     }
 
     return myData[ user ] ? myData[ user ] *1024*1024*1024 : 0;
@@ -373,9 +367,6 @@ async function groupName ( db: SQL_lite_3.Database, container: TS.Users ): Promi
     for( let i=0; i<rows.length; i++ ) {
 
         tmpName = rows[i].remark.split( 'PPS' )[0].trim();
-
-        let RSX = [ "Rasul X08", "Rasul X09", "Rasul X10" ];
-        if ( RSX.includes( tmpName ) ) tmpName = "RSX";
 
         // .. create new user
         if ( !container[ tmpName ] ) container[ tmpName ] = [];
