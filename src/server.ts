@@ -611,7 +611,7 @@ function myTable ( table: TS.Table ) {
     const ts = new Transform( { transform(chunk, enc, cb) { cb(null, chunk) } } );
     const logger = new Console( { stdout: ts } );
 
-    logger.table( table.filter( x => !x[""].includes( "HDS X" ) || !x[""].includes( "RSX" ) || !x[""].includes( "MSN X01" ) ) );
+    logger.table( table.filter( x => !x[""].includes( "HDS X" ) && !x[""].includes( "RSX" ) && !x[""].includes( "MSN X01" ) ) );
 
     const tableString = ( ts.read() || '' ).toString();
 
