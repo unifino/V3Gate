@@ -334,7 +334,7 @@ function info ( groups: TS.Users ): TS.Table {
 function oldTrafficInserter ( user: string ) {
 
     let myData = {
-        "RSX" : 54.8,
+        "RSX" : 54.8 - 75.8,
     }
 
     return myData[ user ] ? myData[ user ] *1024*1024*1024 : 0;
@@ -611,7 +611,7 @@ function myTable ( table: TS.Table ) {
     const ts = new Transform( { transform(chunk, enc, cb) { cb(null, chunk) } } );
     const logger = new Console( { stdout: ts } );
 
-    logger.table( table.filter( x => !x[""].includes( "HDS X" ) ) );
+    logger.table( table.filter( x => !x[""].includes( "HDS X" ) || !x[""].includes( "RSX" ) || !x[""].includes( "MSN X01" ) ) );
 
     const tableString = ( ts.read() || '' ).toString();
 
