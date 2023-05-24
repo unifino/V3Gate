@@ -302,7 +302,7 @@ function info(groups) {
 // -- =====================================================================================
 function oldTrafficInserter(user) {
     let myData = {
-        "RSX": 54.8,
+        "RSX": 54.8 - 75.8,
     };
     return myData[user] ? myData[user] * 1024 * 1024 * 1024 : 0;
 }
@@ -519,7 +519,10 @@ function myTable(table) {
     let r;
     const ts = new Transform({ transform(chunk, enc, cb) { cb(null, chunk); } });
     const logger = new Console({ stdout: ts });
-    logger.table(table.filter(x => !x[""].includes("HDS X")));
+    logger.table(table.filter(x => {
+        let cond = !x[""].includes("HDS X") && !x[""].includes("RSX");
+        return ARGv_1.ARGv.a ? true : cond;
+    }));
     const tableString = (ts.read() || '').toString();
     for (let row of tableString.split(/[\r\n]+/)) {
         r = row.replace(/[^┬]*┬/, '┌');
