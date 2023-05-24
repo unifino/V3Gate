@@ -612,8 +612,12 @@ function myTable ( table: TS.Table ) {
     const ts = new Transform( { transform(chunk, enc, cb) { cb(null, chunk) } } );
     const logger = new Console( { stdout: ts } );
 
-    if ( !ARGv.a )
-        logger.table( table.filter( x => !x[""].includes( "HDS X" ) && !x[""].includes( "RSX" ) ) );
+    logger.table(
+        table.filter( x => {
+            let cond = !x[""].includes( "HDS X" ) && !x[""].includes( "RSX" );
+            return !ARGv.a ? true : cond;
+        } )
+    );
 
     const tableString = ( ts.read() || '' ).toString();
 
