@@ -615,7 +615,7 @@ function myTable ( table: TS.Table ) {
     logger.table(
         table.filter( x => {
             let cond = !x[""].includes( "HDS X" ) && !x[""].includes( "RSX" );
-            return !ARGv.a ? true : cond;
+            return ARGv.a ? true : cond;
         } )
     );
 
