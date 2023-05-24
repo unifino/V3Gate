@@ -7,6 +7,7 @@ import * as SQL_lite_3                  from "sqlite3"
 import * as TS                          from "./types/myTypes"
 import { ARGv }                         from "./ARGv"
 import { setInterval } from "timers";
+import { argv } from "process";
 
 // -- =====================================================================================
 
@@ -611,7 +612,8 @@ function myTable ( table: TS.Table ) {
     const ts = new Transform( { transform(chunk, enc, cb) { cb(null, chunk) } } );
     const logger = new Console( { stdout: ts } );
 
-    logger.table( table.filter( x => !x[""].includes( "HDS X" ) && !x[""].includes( "RSX" ) ) );
+    if ( !ARGv.a )
+        logger.table( table.filter( x => !x[""].includes( "HDS X" ) && !x[""].includes( "RSX" ) ) );
 
     const tableString = ( ts.read() || '' ).toString();
 
